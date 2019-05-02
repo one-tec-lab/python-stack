@@ -2,11 +2,11 @@
 
 Builds development and production environments for full stack applications
 
-**Server components**
-verifies Docker
+## Requirements ##
 
-Optionally, provides commands for installing Go language, NodeJS 10, npm and yarn (check install-container-stack.sh for available commands)
 
+* [Install Docker CE](https://docs.docker.com/install/) 
+Follow instructions for your OS. Runs on Linux, Mac and windows. After installation run "docker-compose -v" is also installed or follow this guide: [docker-compose](https://docs.docker.com/compose/install/). Recent version of docker (Native windows virtualization for Hyper-V or Mac version) should install it by default. 
 
 
 
