@@ -6,9 +6,10 @@ Builds development and production environments for full stack applications
 
 
 * [Install Docker CE](https://docs.docker.com/install/) 
-Follow instructions for your OS. Runs on Linux, Mac and windows. After installation run "docker-compose -v" is also installed or follow this guide: [docker-compose](https://docs.docker.com/compose/install/). Recent version of docker (Native windows virtualization for Hyper-V or Mac version) should install it by default. 
+Follow instructions for your OS. Runs on Linux, Mac and Windows. After installation run "docker-compose -v" to verify it is also installed or follow this guide: [docker-compose](https://docs.docker.com/compose/install/). Recent version of docker (Native windows virtualization for Hyper-V or Mac version) should install it by default. 
 
-
+* [Install Git and Git Bash](https://git-scm.com/downloads) 
+Follow instructions for your OS. Runs on Linux, Mac and Windows. After installation run "docker-compose -v" to verify it is also installed or follow this guide: [docker-compose](https://docs.docker.com/compose/install/). Recent version of docker (Native windows virtualization for Hyper-V or Mac version) should install it by default. 
 
 ## Install
 Run the following command in a terminal (ssh or bash):
