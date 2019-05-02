@@ -17,7 +17,7 @@ After installation run "docker-compose -v" to verify it is also installed or fol
 * [Install Git and Git Bash](https://git-scm.com/downloads): Follow instructions for your OS. Runs on Linux, Mac and Windows.(Git Bash is only required if you are using Windows).
 
 ## Install
-1-Run the following command in a terminal (ssh or bash):
+1-Run the following command in a Linux or Mac terminal (or Git Bash under windows):
 
     git clone https://github.com/one-tec-lab/stackbuilder.git your-awesome-project
 
