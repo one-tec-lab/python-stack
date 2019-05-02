@@ -32,12 +32,12 @@ services:
        # RDS_PASSWORD should be passed as environment Variable
       RDS_PASSWORD:
     ports:
-        - '8000:8000'
+      - '8000:8000'
     volumes:
-        - './src/:/app/'
+      - './src/:/app/'
     command: bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
     depends_on:
-      db
+      - db
 # Names our volume
 volumes:
   my-db:
