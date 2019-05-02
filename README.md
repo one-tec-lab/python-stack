@@ -7,7 +7,7 @@ Builds development and production environments for full stack applications
 
 ### Docker ###
 Install Docker CE for your OS:
-* [Docker CE for Windows](https://docs.docker.com/docker-for-windows/install/). Follow the [Getting Started Guide for Windows](https://docs.docker.com/docker-for-windows/) to enable shared drives option.
+* [Docker CE for Windows 10](https://docs.docker.com/docker-for-windows/install/). Follow the [Getting Started Guide for Windows](https://docs.docker.com/docker-for-windows/) to enable shared drives option.
 * [Docker CE for Mac](https://docs.docker.com/docker-for-mac/install/). Follow the [Getting Started Guide for Mac](https://docs.docker.com/docker-for-mac/) to enable File sharing.
 * [Docker CE for Linux](https://docs.docker.com/install/) Follow instructions for your OS: [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/), [Debian](https://docs.docker.com/install/linux/docker-ce/debian/), [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/), [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/). Follow this [Post-Install Instructions](https://docs.docker.com/install/linux/linux-postinstall/) if required.
 
