@@ -92,6 +92,7 @@ function stack-up {
 
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
     MYSQL_PASSWORD=$dbuserpassword \
+    RDS_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
 
