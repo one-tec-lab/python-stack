@@ -17,8 +17,22 @@ After installation run "docker-compose -v" to verify it is also installed or fol
 * [Install Git and Git Bash](https://git-scm.com/downloads): Follow instructions for your OS. Runs on Linux, Mac and Windows.(Git Bash is only required if you are using Windows).
 
 ## Install
-Run the following command in a terminal (ssh or bash):
+1-Run the following command in a terminal (ssh or bash):
 
-    curl https://raw.githubusercontent.com/one-tec-lab/container-stack/master/install-container-stack.sh > $HOME/install-container-stack.sh;source install-container-stack.sh; install-stack 2>&1 | tee install-container-stack.log
+    git clone https://github.com/one-tec-lab/stackbuilder.git your-awesome-project
 
-Logs will be available at the file install-container-stack.log of your user home.
+This will create a new folder your-awesome-project called under your current directory. Replace "your-awesome-project" with any name.
+
+2-cd to the new project folder
+
+    cd your-awesome-project
+
+3-Source the stackbuilder script to make commands available
+
+    source stackbuilder.sh
+
+4-Run the stack-build command
+
+    stack-build
+    
+Read stackbuilder.sh file for available commands
