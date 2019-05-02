@@ -7,8 +7,8 @@ Builds development and production environments for full stack applications
 
 ### Docker ###
 Install Docker CE for your OS:
-* [Docker CE for Windows](https://docs.docker.com/docker-for-windows/install/). Be sure to read the [Getting Started Guide for Windows](https://docs.docker.com/docker-for-windows/) to enable shared drives option
-* [Docker CE for Mac](https://docs.docker.com/docker-for-mac/install/). Follow the [Getting Started Guide for Mac](https://docs.docker.com/docker-for-mac/)
+* [Docker CE for Windows](https://docs.docker.com/docker-for-windows/install/). Be sure to read the [Getting Started Guide for Windows](https://docs.docker.com/docker-for-windows/) to enable shared drives option.
+* [Docker CE for Mac](https://docs.docker.com/docker-for-mac/install/). Follow the [Getting Started Guide for Mac](https://docs.docker.com/docker-for-mac/).
 * [Docker CE for Linux](https://docs.docker.com/install/) Follow instructions for your OS: [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/), [Debian](https://docs.docker.com/install/linux/docker-ce/debian/), [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/), [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/). Follow this [Post-Install Instructions](https://docs.docker.com/install/linux/linux-postinstall/) if required.
 
 After installation run "docker-compose -v" to verify it is also installed or follow this guide: [docker-compose](https://docs.docker.com/compose/install/). Recent version of docker (Native windows virtualization for Hyper-V or Mac version) should install it by default. 
@@ -35,4 +35,4 @@ This will create a new folder your-awesome-project called under your current dir
 
     stack-build
     
-Read stackbuilder.sh file for available commands
+Read stackbuilder.sh file for available commands.
