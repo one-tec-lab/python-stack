@@ -90,6 +90,9 @@ function stack-up {
     done
     echo
 
+
+    docker-compose run app django-admin startproject project
+    
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
     MYSQL_PASSWORD=$dbuserpassword \
     RDS_PASSWORD=$dbuserpassword \
