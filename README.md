@@ -3,7 +3,7 @@
 Builds development and production environments for full stack applications
 
 **Server components**: 
-verifies Docker
+-verifies Docker
 
 Optionally, provides commands for installing Go language, NodeJS 10, npm and yarn (check install-container-stack.sh for available commands)
 
