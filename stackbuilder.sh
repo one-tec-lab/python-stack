@@ -34,3 +34,14 @@ case "$os" in
   echo "Unknown Operating system $OSTYPE"
   exit 1
 esac
+
+
+function update-stackbuilder {
+   
+   git fetch --all
+   git reset --hard origin/master
+   git pull origin master
+   
+
+   echo "Stack utilities updated to $CONTAINER_STACK_VER"
+}
