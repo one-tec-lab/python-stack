@@ -19,7 +19,7 @@ services:
       - '23306'
       # Where our data will be persisted
     volumes:
-      - my-db:/var/lib/mysql
+      - data-db:/var/lib/mysql
 
   app:
     build: ./src
@@ -40,4 +40,4 @@ services:
       - db
 # Names our volume
 volumes:
-  my-db:
+  data-db:
