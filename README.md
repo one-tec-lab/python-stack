@@ -14,7 +14,7 @@ Install Docker CE for your OS:
 After installation run "docker-compose -v" to verify it is also installed or follow this guide: [docker-compose](https://docs.docker.com/compose/install/). Recent version of docker (Native windows virtualization for Hyper-V or Mac version) should install it by default. 
 
 ### Git and Git Bash ###
-* [Install Git and Git Bash](https://git-scm.com/downloads) (Git Bash is only required if you are using Windows).Follow instructions for your OS. Runs on Linux, Mac and Windows. 
+* [Install Git and Git Bash](https://git-scm.com/downloads): Follow instructions for your OS. Runs on Linux, Mac and Windows.(Git Bash is only required if you are using Windows).
 
 ## Install
 Run the following command in a terminal (ssh or bash):
