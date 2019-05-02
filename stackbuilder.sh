@@ -45,3 +45,55 @@ function update-stackbuilder {
 
    echo "Stack utilities updated to $CONTAINER_STACK_VER"
 }
+
+function stack-up {
+   # Get script arguments for non-interactive mode
+    while [ "$1" != "" ]; do
+       case $1 in
+           -m | --mysqlrootpwd )
+               shift
+               mysqlrootpwd="$1"
+               ;;
+           -a | --apidbpwd )
+               shift
+               apidbpwd="$1"
+               ;;
+           -d | --domain )
+               shift
+               $domain_name="$1"
+               ;;
+
+       esac
+       shift
+    done
+  
+    while true
+    do
+       read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+       echo
+       read -s -p "Confirm MySQL ROOT Password: " password2
+       echo
+       [ "$mysqlrootpassword" = "$password2" ] && break
+       echo "Passwords don't match. Please try again."
+       echo
+    done
+    echo
+    while true
+    do
+       read -s -p "Enter a database user Password: " dbuserpassword
+       echo
+       read -s -p "Confirm database user Password: " password2
+       echo
+       [ "$dbuserpassword" = "$password2" ] && break
+       echo "Passwords don't match. Please try again."
+       echo
+    done
+    echo
+
+    MYSQL_PASSWORD=$dbuserpassword \
+    DATABASE_PASSWORD=$dbuserpassword \
+    WORDPRESS_DB_PASSWORD=$dbuserpassword \
+    CURRENT_UID=$(id -u):$(id -g) \
+    docker-compose up -d
+
+}
