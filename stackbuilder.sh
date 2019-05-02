@@ -90,9 +90,8 @@ function stack-up {
     done
     echo
 
+    MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
     MYSQL_PASSWORD=$dbuserpassword \
-    DATABASE_PASSWORD=$dbuserpassword \
-    WORDPRESS_DB_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
 
