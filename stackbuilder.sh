@@ -91,13 +91,17 @@ function stack-up {
     echo
 
 
-    docker-compose run app django-admin startproject project .
-    docker-compose down --remove-orphans
     
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
     MYSQL_PASSWORD=$dbuserpassword \
     RDS_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
+
+}
+
+function stack-build {
+    docker-compose run app django-admin startproject project .
+    docker-compose down --remove-orphans
 
 }
