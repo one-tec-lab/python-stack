@@ -45,7 +45,7 @@ services:
        # RDS_PASSWORD should be passed as environment Variable
       RDS_PASSWORD:
     ports:
-      - '28000:8000'
+      - '8000:8000'
     volumes:
       - .:/code
     command: python manage.py runserver 0.0.0.0:8000
