@@ -34,7 +34,7 @@ wait_for() {
   done
   echo "Operation timed out" >&2
   exit 1
-}
+} 
 
 while [ $# -gt 0 ]
 do
