@@ -89,11 +89,14 @@ function stack-up {
        echo
     done
     echo
-    MYSQL_ROOT_PASSWORD=$mysqlrootpassword docker-compose up -d db
+    
+    MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
+    MYSQL_PASSWORD=$dbuserpassword \
+    docker-compose up -d db
     
      # Sleep to let MySQL load (there's probably a better way to do this)
-    echo "Waiting 20 seconds for MySQL to load"
-    sleep 20
+    echo "Waiting 30 seconds for MySQL to load"
+    sleep 30
     
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
     MYSQL_PASSWORD=$dbuserpassword \
