@@ -91,7 +91,7 @@ function stack-up {
     echo
 
 
-    docker-compose run app django-admin startproject project
+    docker-compose run app django-admin startproject project .
     docker-compose down --remove-orphans
     
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
