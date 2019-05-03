@@ -4,7 +4,7 @@ services:
     container_name: portainer
     image: portainer/portainer
     command: -H unix:///var/run/docker.sock
-    restart: always
+    #restart: always
     #network_mode: bridge
     #networks:
     #  - traefik-net
@@ -17,7 +17,7 @@ services:
       - "traefik.enable=false"
   db:
     image: mysql:5.7
-    restart: always
+    #restart: always
     environment:
       MYSQL_DATABASE: stack_db
       # 
@@ -36,7 +36,7 @@ services:
 
   app:
     build: .
-    restart: always
+    #restart: always
     environment:
       RDS_DB_NAME: stack_db
       RDS_HOST: db
