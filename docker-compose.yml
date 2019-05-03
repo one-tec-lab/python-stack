@@ -28,7 +28,7 @@ services:
       MYSQL_ROOT_PASSWORD: 
     ports:
       # <Port exposed> : < MySQL Port running inside container>
-      - 23306:3306
+      - 127.0.0.1:23306:3306
 
       # Where our data will be persisted
     volumes:
