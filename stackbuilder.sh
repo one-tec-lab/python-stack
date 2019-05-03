@@ -89,7 +89,7 @@ function stack-up {
        echo
     done
     echo
-    
+
     
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
     MYSQL_PASSWORD=$dbuserpassword \

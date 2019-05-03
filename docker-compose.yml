@@ -1,22 +1,17 @@
 version: '3.3'
 
-networks:
-  traefik-net:
-    external: true
-  internal:
-    external: false
 
 services:
+
+
   portainer:
     container_name: portainer
     image: portainer/portainer
     command: -H unix:///var/run/docker.sock
     restart: always
 
-    networks:
-      - traefik-net
     ports:
-      - 127.0.0.1:29000:9000
+      - '127.0.0.1:29000:9000'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - data-portainer:/data
@@ -32,11 +27,9 @@ services:
       RDS_USERNAME: stack_db_user
        # RDS_PASSWORD should be passed as environment Variable
       RDS_PASSWORD:
-    networks:
-      - internal
-      - traefik-net
+
     ports:
-      - 8000:8000
+      - '8000:8000'
     volumes:
       - .:/code
     command: ./wait-for.sh db:23306 -- bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
@@ -56,17 +49,20 @@ services:
       MYSQL_PASSWORD: 
       # Password for root access should be passed as environment Variable
       MYSQL_ROOT_PASSWORD: 
-    networks:
-      - internal
+
     ports:
       # <Port exposed> : < MySQL Port running inside container>
-      - 23306:3306
+      - '23306:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
       # Where our data will be persisted
     volumes:
       - data-db:/var/lib/mysql
     labels:
       - traefik.enable=false      
-      
+
+        
 # Names our volume
 volumes:
   data-db:
