@@ -35,7 +35,7 @@ services:
       - data-db:/var/lib/mysql
 
   app:
-    build: ./src
+    build: .
     restart: always
     environment:
       RDS_DB_NAME: stack_db
