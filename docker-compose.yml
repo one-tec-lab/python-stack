@@ -48,7 +48,7 @@ services:
       - '8000:8000'
     volumes:
       - .:/code
-    command: ./wait-for-it.sh -t 0 db:23306 -- bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
+    command: bash -c "./wait-for-it.sh -t 0 db:23306 -- python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
     depends_on:
       - db
 # Names our volume
