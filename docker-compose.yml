@@ -28,7 +28,7 @@ services:
       MYSQL_ROOT_PASSWORD: 
     ports:
       # <Port exposed> : < MySQL Port running inside container>
-      - 127.0.0.1:23306:3306
+      - 23306:3306
 
       # Where our data will be persisted
     volumes:
@@ -45,7 +45,7 @@ services:
        # RDS_PASSWORD should be passed as environment Variable
       RDS_PASSWORD:
     ports:
-      - '8000:8000'
+      - 8000:8000
     volumes:
       - .:/code
     command: ./wait-for.sh db:23306 -- bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
