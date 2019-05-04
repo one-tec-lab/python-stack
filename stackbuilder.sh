@@ -20,17 +20,17 @@ os=${OSTYPE//[0-9.-]*/}
 echo "Stackbuilder v $CONTAINER_STACK_VER $(date -r ~/stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
 case "$os" in
   darwin)
-    echo "I'm a Mac"
+    echo "I'm in a Mac"
     validbash=1
     ;;
 
   msys)
-    echo "I'm Windows using git bash"
+    echo "I'm in Windows using git bash"
     validbash=1
     ;;
 
   linux)
-    echo "I'm Linux"
+    echo "I'm in Linux"
      validbash=1
    ;;
   *)
