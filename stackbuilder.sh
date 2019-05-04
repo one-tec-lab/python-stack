@@ -47,7 +47,7 @@ function update-stackbuilder {
    git fetch --all
    git reset --hard origin/master
    git pull origin master
-   if [ -f ./stackbuilder.sh ] and [ validbash=1 ]; then 
+   if [ -f ./stackbuilder.sh ] && [ validbash=1 ]; then 
       echo "updating stackbuilder script for bash"
       cat ./stackbuilder.sh > ~/stackbuilder.sh
       grep -qxF 'source ~/stackbuilder.sh' ~/.bashrc || echo 'source ~/stackbuilder.sh' >> ~/.bashrc
