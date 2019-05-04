@@ -47,6 +47,9 @@ function update-stackbuilder {
 }
 
 function stack-up {
+  comment_acme_staging=" "
+  comment_redirect="#"
+  comment_acme="#"
    # Get script arguments for non-interactive mode
     while [ "$1" != "" ]; do
        case $1 in
@@ -70,8 +73,10 @@ function stack-up {
     while true
     do
        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+       mysqlrootpassword="${mysqlrootpassword:-changeme}"
        echo
        read -s -p "Confirm MySQL ROOT Password: " password2
+       password2="${password2:-changeme}"
        echo
        [ "$mysqlrootpassword" = "$password2" ] && break
        echo "Passwords don't match. Please try again."
@@ -81,14 +86,65 @@ function stack-up {
     while true
     do
        read -s -p "Enter a database user Password: " dbuserpassword
+       dbuserpassword="${dbuserpassword:-changeme}"
        echo
        read -s -p "Confirm database user Password: " password2
+       password2="${password2:-changeme}"
        echo
        [ "$dbuserpassword" = "$password2" ] && break
        echo "Passwords don't match. Please try again."
        echo
     done
     echo
+
+
+    while true
+    do
+        read  -p "Enter DOMAIN (ENTER for 'localhost'): "  stackdomain  
+        stackdomain="${stackdomain:-localhost}"
+        echo
+        [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
+        echo
+    done
+
+    echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.env
+
+    while true
+    do
+        read  -p "Enter E-MAIL for certificates notifications (ENTER for admin@mail.com): "  
+        certs_mail="${certs_mail:-admin@mail.com}"
+        echo
+        [ -z "$certs_mail" ] && echo "Please provide a valid mail for certs" || break
+        echo
+    done
+
+    bash -c "cat > ./proxy/traefik.toml" <<-EOF
+debug = false
+logLevel = "ERROR"
+defaultEntryPoints = ["https","http"]
+[entryPoints]
+  [entryPoints.http]
+      address = ":80"
+      $comment_redirect [entryPoints.http.redirect]
+      $comment_redirect   entryPoint = "https"
+  [entryPoints.https]
+      address = ":443"
+      [entryPoints.https.tls]
+[retry]
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "$stackdomain"
+watch = true
+exposedByDefault = false
+$comment_acme [acme]
+$comment_acme  $comment_acme_staging caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
+$comment_acme   email = "$certs_mail"
+$comment_acme   storage = "acme/certs.json"
+$comment_acme   entryPoint = "https"
+$comment_acme   onHostRule = true
+$comment_acme   [acme.httpChallenge]
+$comment_acme      entryPoint = "http"
+EOF
 
     
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \

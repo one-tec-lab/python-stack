@@ -1,7 +1,37 @@
-version: '3.3'
+version: '3.5'
 
+networks:
+  sb_public:
+    driver: bridge   
+  sb_internal:     
+
+# Names our volume
+volumes:
+  data-db:
+  data-portainer:
+  data-postgres:
+  data-pgadmin:  
 
 services:
+  reverse-proxy:
+    container_name: traefik
+    image: traefik # The official Traefik docker image
+    command: --api --docker # Enables the web UI and tells Traefik to listen to docker
+    restart: always
+    #network_mode: bridge
+    networks:
+      - sb_public
+      - sb_internal
+    ports:
+      - "80:80"     # The HTTP port
+      - "443:443"
+      - "127.0.0.1:8080:8080" # The Web UI (enabled by --api)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+      - ./proxy/traefik.toml:/traefik.toml # Traefik configuration file
+      - ./proxy/acme:/acme # Tell Traefik to save SSL certs here
+    labels:
+      - "traefik.enable=false"
 
 
   portainer:
@@ -9,14 +39,16 @@ services:
     image: portainer/portainer
     command: -H unix:///var/run/docker.sock
     restart: always
-
+    networks:
+      - sb_public
     ports:
-      - '127.0.0.1:29000:9000'
+      - "127.0.0.1:29000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - data-portainer:/data
     labels:
       - "traefik.enable=false"
+
   app:
     build: .
     restart: always
@@ -27,19 +59,40 @@ services:
       RDS_USERNAME: stack_db_user
        # RDS_PASSWORD should be passed as environment Variable
       RDS_PASSWORD:
-
+    networks:
+      #- sb_public
+      - sb_internal
     ports:
-      - '8000:8000'
+      - "127.0.0.1:20080:80"
     volumes:
-      - .:/code
-    command: ./wait-for.sh db:23306 -- bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
+      - ./code:/code
+    #command: ./wait-for.sh db:23306 --timeout=90 -- bash -c "python manage.py migrate --no-input && python manage.py runserver 0.0.0.0:8000"
+    command: python3 -m http.server 80
+    depends_on:
+      - db            
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=app"
+      - "traefik.docker.network=sb_public"
+      - "traefik.frontend.rule=Host:${STACK_MAIN_DOMAIN:-localhost}"
+      - "traefik.port=80"   
+  phpmyadmin:
     depends_on:
       - db
-    links:
-      - db
-
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - '127.0.0.1:28080:80'
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: 
+    networks:
+      - sb_internal
+    labels:
+      - "traefik.enable=false"
   db:
-    image: mysql:5.7
+    container_name: db
+    image: mysql:5.7.26
     restart: always
     environment:
       MYSQL_DATABASE: stack_db
@@ -49,21 +102,47 @@ services:
       MYSQL_PASSWORD: 
       # Password for root access should be passed as environment Variable
       MYSQL_ROOT_PASSWORD: 
-
+    networks:
+      - sb_internal
     ports:
       # <Port exposed> : < MySQL Port running inside container>
-      - '23306:3306'
-    expose:
-      # Opens port 3306 on the container
-      - '3306'
+      - "127.0.0.1:23306:3306"
       # Where our data will be persisted
     volumes:
       - data-db:/var/lib/mysql
     labels:
       - traefik.enable=false      
 
-        
-# Names our volume
-volumes:
-  data-db:
-  data-portainer:
+
+  # postgres:
+  #   container_name: postgres_container
+  #   image: postgres
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+  #     PGDATA: /data/postgres
+  #   volumes:
+  #      - data-postgres:/data/postgres
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - sb_internal
+  #   restart: unless-stopped
+  #   labels:
+  #     - "traefik.enable=false"
+  
+  # pgadmin:
+  #   container_name: pgadmin_container
+  #   image: dpage/pgadmin4
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+  #   volumes:
+  #      - data-pgadmin:/root/.pgadmin
+  #   ports:
+  #     - "${PGADMIN_PORT:-5050}:80"
+  #   networks:
+  #     - sb_internal
+  #   restart: unless-stopped
+  #   labels:
+  #     - "traefik.enable=false"
