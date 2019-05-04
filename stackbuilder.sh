@@ -50,6 +50,7 @@ function update-stackbuilder {
    if [ -f stackbuilder.sh ] && [ validbash=1 ]; then 
       echo "updating stackbuilder script for bash"
       cat ./stackbuilder.sh > ~/stackbuilder.sh
+      #add source line if not in .bashrc
       grep -qxF 'source ~/stackbuilder.sh' ~/.bashrc || echo 'source ~/stackbuilder.sh' >> ~/.bashrc
       source ./stackbuilder.sh 
    else
