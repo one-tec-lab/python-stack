@@ -17,7 +17,7 @@
 export CONTAINER_STACK_VER="4.1"
 validbash=0
 os=${OSTYPE//[0-9.-]*/}
-
+echo "Stackbuilder v $CONTAINER_STACK_VER $(date -r ~/stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
 case "$os" in
   darwin)
     echo "I'm a Mac"
