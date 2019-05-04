@@ -14,21 +14,25 @@
 # 0.1 - Initial Script
 # Disclaimer : Script provided AS IS. Use it at your own risk....
 ##################################################################
-export CONTAINER_STACK_VER="4.0"
+export CONTAINER_STACK_VER="4.1"
+validbash=0
 os=${OSTYPE//[0-9.-]*/}
 
 case "$os" in
   darwin)
     echo "I'm a Mac"
+    validbash=1
     ;;
 
   msys)
     echo "I'm Windows using git bash"
+    validbash=1
     ;;
 
   linux)
     echo "I'm Linux"
-    ;;
+     validbash=1
+   ;;
   *)
 
   echo "Unknown Operating system $OSTYPE"
@@ -36,13 +40,21 @@ case "$os" in
 esac
 
 
+
+
 function update-stackbuilder {
    
    git fetch --all
    git reset --hard origin/master
    git pull origin master
-   
-
+   if [ -f ./stackbuilder.sh ] and [ validbash=1 ]; then 
+      echo "updating stackbuilder script for bash"
+      cat ./stackbuilder.sh > ~/stackbuilder.sh
+      grep -qxF 'source ~/stackbuilder.sh' ~/.bashrc || echo 'source ~/stackbuilder.sh' >> ~/.bashrc
+      source ./stackbuilder.sh 
+   else
+    echo "You need to be inside a valid stackbuilder project and bash terminal"
+   fi
    echo "Stack utilities updated to $CONTAINER_STACK_VER"
 }
 
