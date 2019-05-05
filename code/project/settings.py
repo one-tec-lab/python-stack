@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_mysql',
 ]
 
 MIDDLEWARE = [
@@ -70,20 +71,20 @@ TEMPLATES = [
 WSGI_APPLICATION = 'project.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+#Database
+#https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'stack_db',
         'USER': 'stack_db_user',
-        'PASSWORD': 'test',
+        'PASSWORD': 'changeme',
         'HOST': 'db',
-        'PORT': '23306',
+        'PORT': '3306',
     }
 }
-#DATABASES = {
+# DATABASES = {
 #    'default': {
 #        'ENGINE': 'django.db.backends.mysql',
 #        'NAME': os.environ.get('RDS_DB_NAME'),
@@ -92,7 +93,7 @@ DATABASES = {
 #        'HOST': os.environ.get('RDS_HOST'),
 #        'PORT': os.environ.get('RDS_PORT'),
 #    }
-#}
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
