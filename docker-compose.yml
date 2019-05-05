@@ -14,7 +14,7 @@ volumes:
 
 services:
   reverse-proxy:
-    container_name: traefik
+    container_name: proxy
     image: traefik # The official Traefik docker image
     command: --api --docker # Enables the web UI and tells Traefik to listen to docker
     restart: always
