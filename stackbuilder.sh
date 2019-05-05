@@ -6,7 +6,7 @@
 # of a container stack environment 
 # on ubuntu 18.04.1 and later
 # Date : may 2019
-# written by : tadeo
+# written by : Tadeo Gutierrez
 # 
 # Version : 4.0
 # History : 0.3 - sourced by .bashrc
