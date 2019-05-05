@@ -2,22 +2,24 @@
 
 ################################################################
 # Script_Name : stackbuilder.sh
-# Description : Perform an automated standard installation
-# of a container stack environment 
-# on ubuntu 18.04.1 and later
-# Date : may 2019
+# Description : Build stack for application deployment.
+
+# Compatibulity : ubuntu 18.04.1 and later
+# Date : May 4th, 2019
 # written by : Tadeo Gutierrez
 # 
-# Version : 4.0
+# Version : SB_VERSION export
 # History : 0.3 - sourced by .bashrc
 
 # 0.1 - Initial Script
-# Disclaimer : Script provided AS IS. Use it at your own risk....
+# Disclaimer : Script provided AS IS. Use it at your own risk.
+# Licence : MIT
 ##################################################################
-export CONTAINER_STACK_VER="4.1"
+
+export SB_VERSION="4.1.1"
 validbash=0
 os=${OSTYPE//[0-9.-]*/}
-echo "Stackbuilder v $CONTAINER_STACK_VER $(date -r ~/stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
+echo "Stackbuilder v $SB_VERSION $(date -r ~/stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
 case "$os" in
   darwin)
     echo "I'm in a Mac"
@@ -56,7 +58,7 @@ function update-stackbuilder {
    else
     echo "You need to be inside a valid stackbuilder project and bash terminal"
    fi
-   echo "Stack utilities updated to $CONTAINER_STACK_VER"
+   echo "Stack utilities updated to $SB_VERSION"
 }
 
 function stack-up {
