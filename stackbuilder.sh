@@ -117,8 +117,8 @@ function stack-up {
 
     while true
     do
-        read  -p "Enter DOMAIN (ENTER for $default_host): "  stackdomain  
-        stackdomain="${stackdomain:-default_host}"
+        read  -p "Enter DOMAIN (default: [$default_host]): "  stackdomain  
+        stackdomain="${stackdomain:-$default_host}"
         echo
         [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
         echo
@@ -180,6 +180,36 @@ function stack-build {
 
 }
 
+function readvaluefromfile {
+
+
+   file="$2"
+   label="$1"
+
+   listalineas=""
+   linefound=0
+   value_found=""       
+   listalineas=$(cat $file)
+   if [[ !  -z  $listalineas  ]];then
+     #echo "buscando lineas existentes con:"
+     #echo "$nuevacad"
+     #$usesudo >$temporal
+     while read -r linea; do
+     #strip spaces
+     clean_line=${linea//[[:blank:]]/}
+     if [[ $clean_line == *"$label="* ]];then
+       #echo "... $linea ..."
+       value_found=${linea#*=}
+       linefound=1
+     fi
+     done <<< "$listalineas"
+
+   fi
+   if [ $linefound == 0 ];then
+     echo "Value found for $label: $value_found"
+   fi
+   echo $value_found
+}  
 
 function addreplacevalue {
 
