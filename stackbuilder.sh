@@ -67,6 +67,7 @@ function stack-up {
   comment_acme="#"
   default_password="changeme"
   default_host="localhost"
+  default_admin_user="admin"
    # Get script arguments for non-interactive mode
     while [ "$1" != "" ]; do
        case $1 in
@@ -117,23 +118,46 @@ function stack-up {
 
     while true
     do
-        read  -p "Enter DOMAIN (default: [$default_host]): "  stackdomain  
+        read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
         stackdomain="${stackdomain:-$default_host}"
         echo
         [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
         echo
     done
 
-    echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.env
+    while true
+    do
+        read  -p "Provide an admin user name (default: [$default_admin_user]): "  admin_user  
+        admin_user="${admin_user:-$default_admin_user}"
+        echo
+        [ -z "$admin_user" ] && echo "Please provide an admin user name" || break
+        echo
+    done
 
     while true
     do
-        read  -p "Enter E-MAIL for certificates notifications (ENTER for admin@mail.com): "  
-        certs_mail="${certs_mail:-admin@mail.com}"
+        read  -p "Provide admin E-MAIL (ENTER for admin@mail.com): "  
+        admin_mail="${admin_mail:-admin@mail.com}"
         echo
-        [ -z "$certs_mail" ] && echo "Please provide a valid mail for certs" || break
+        [ -z "$admin_mail" ] && echo "Please provide a valid mail for certs" || break
         echo
     done
+    echo
+    while true
+    do
+       read -s -p "Provide Django admin Password: " djangoadminpassword
+       djangoadminpassword="${djangoadminpassword:-$default_password}"
+       echo
+       read -s -p "Confirm Django admin Password: " password2
+       password2="${password2:-$default_password}"
+       echo
+       [ "$djangoadminpassword" = "$password2" ] && break
+       echo "Passwords don't match. Please try again."
+       echo
+    done
+    echo
+
+    echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.env
 
     bash -c "cat > ./proxy/traefik.toml" <<-EOF
 debug = false
@@ -155,7 +179,7 @@ watch = true
 exposedByDefault = false
 $comment_acme [acme]
 $comment_acme  $comment_acme_staging caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
-$comment_acme   email = "$certs_mail"
+$comment_acme   email = "$admin_mail"
 $comment_acme   storage = "acme/certs.json"
 $comment_acme   entryPoint = "https"
 $comment_acme   onHostRule = true
@@ -171,7 +195,7 @@ EOF
     RDS_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
-
+    docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
 }
 
 function stack-build {
@@ -205,9 +229,7 @@ function readvaluefromfile {
      done <<< "$listalineas"
 
    fi
-   if [ $linefound == 0 ];then
-     echo "Value found for $label: $value_found"
-   fi
+
    echo $value_found
 }  
 
