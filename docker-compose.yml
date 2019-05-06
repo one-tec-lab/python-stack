@@ -55,7 +55,7 @@ services:
     environment:
       RDS_DB_NAME: stack_db
       RDS_HOST: db
-      RDS_PORT: 23306
+      RDS_PORT: 3306
       RDS_USERNAME: stack_db_user
        # RDS_PASSWORD should be passed as environment Variable
       RDS_PASSWORD:

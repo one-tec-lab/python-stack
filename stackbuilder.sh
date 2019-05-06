@@ -65,6 +65,8 @@ function stack-up {
   comment_acme_staging=" "
   comment_redirect="#"
   comment_acme="#"
+  default_password="changeme"
+  default_host="localhost"
    # Get script arguments for non-interactive mode
     while [ "$1" != "" ]; do
        case $1 in
@@ -88,10 +90,10 @@ function stack-up {
     while true
     do
        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
-       mysqlrootpassword="${mysqlrootpassword:-changeme}"
+       mysqlrootpassword="${mysqlrootpassword:-$default_password}"
        echo
        read -s -p "Confirm MySQL ROOT Password: " password2
-       password2="${password2:-changeme}"
+       password2="${password2:-$default_password}"
        echo
        [ "$mysqlrootpassword" = "$password2" ] && break
        echo "Passwords don't match. Please try again."
@@ -101,10 +103,10 @@ function stack-up {
     while true
     do
        read -s -p "Enter a database user Password: " dbuserpassword
-       dbuserpassword="${dbuserpassword:-changeme}"
+       dbuserpassword="${dbuserpassword:-$default_password}"
        echo
        read -s -p "Confirm database user Password: " password2
-       password2="${password2:-changeme}"
+       password2="${password2:-$default_password}"
        echo
        [ "$dbuserpassword" = "$password2" ] && break
        echo "Passwords don't match. Please try again."
@@ -115,8 +117,8 @@ function stack-up {
 
     while true
     do
-        read  -p "Enter DOMAIN (ENTER for 'localhost'): "  stackdomain  
-        stackdomain="${stackdomain:-localhost}"
+        read  -p "Enter DOMAIN (ENTER for $default_host): "  stackdomain  
+        stackdomain="${stackdomain:-default_host}"
         echo
         [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
         echo
@@ -161,7 +163,9 @@ $comment_acme   [acme.httpChallenge]
 $comment_acme      entryPoint = "http"
 EOF
 
-    
+    addreplacevalue "ALLOWED_HOSTS = [" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./code/project/settings.py
+
+    STACK_MAIN_DOMAIN=$stackdomain \
     MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
     MYSQL_PASSWORD=$dbuserpassword \
     RDS_PASSWORD=$dbuserpassword \
@@ -174,4 +178,42 @@ function stack-build {
     docker-compose run app django-admin startproject project .
     docker-compose down --remove-orphans
 
+}
+
+
+function addreplacevalue {
+
+   usesudo="$4"
+   archivo="$3"
+   nuevacad="$2"
+   buscar="$1"
+   temporal="$archivo.tmp.kalan"
+   listalineas=""
+   linefound=0       
+   listalineas=$(cat $archivo)
+   if [[ !  -z  $listalineas  ]];then
+     #echo "buscando lineas existentes con:"
+     #echo "$nuevacad"
+     #$usesudo >$temporal
+     while read -r linea; do
+     if [[ $linea == *"$buscar"* ]];then
+       #echo "... $linea ..."
+       if [ ! "$nuevacad" == "_DELETE_" ];then
+          ## just add new line if value is NOT _DELETE_
+          echo $nuevacad >> $temporal
+       fi
+       linefound=1
+     else
+       echo $linea >> $temporal
+
+     fi
+     done <<< "$listalineas"
+
+     cat $temporal > $archivo
+     rm -rf $temporal
+   fi
+   if [ $linefound == 0 ];then
+     echo "Adding new value to file: $nuevacad"
+     echo $nuevacad>>$archivo
+   fi
 }
