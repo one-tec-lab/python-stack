@@ -58,14 +58,15 @@ services:
       RDS_DB_NAME: ${SB_DB_NAME:-stack_db}
       RDS_USERNAME: ${SB_DB_USER:-stack_db_user}
        # RDS_PASSWORD should be passed as environment Variable
-      RDS_PASSWORD:
+      RDS_PASSWORD: ${SB_RDS_PASSWORD:-ch4ng3m3}
+      SB_ENV: "PROD"
     networks:
       #- sb_public
       - sb_internal
     ports:
       - "127.0.0.1:20080:80"
-    volumes:
-      - ./code:/code
+    #volumes:
+    #  - ./app:/workspace
     #command: ./wait-for.sh db:3306 --timeout=90 -- bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:8000"
     command: bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:80"
     #command: python3 -m http.server 80
@@ -86,7 +87,7 @@ services:
       - '127.0.0.1:28080:80'
     environment:
       PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: 
+      MYSQL_ROOT_PASSWORD: ${SB_MYSQL_ROOT_PASSWORD:-ch4ng3m3}
     networks:
       - sb_internal
     labels:
@@ -100,9 +101,9 @@ services:
       # 
       MYSQL_USER: stack_db_user
       # MSQL_PASSWORD should be passed as environment Variable
-      MYSQL_PASSWORD: 
+      MYSQL_PASSWORD: ${SB_MYSQL_PASSWORD:-ch4ng3m3}
       # Password for root access should be passed as environment Variable
-      MYSQL_ROOT_PASSWORD: 
+      MYSQL_ROOT_PASSWORD: ${SB_MYSQL_ROOT_PASSWORD:-ch4ng3m3}
     networks:
       - sb_internal
     ports:

@@ -188,12 +188,12 @@ $comment_acme   [acme.httpChallenge]
 $comment_acme      entryPoint = "http"
 EOF
 
-    addreplacevalue "ALLOWED_HOSTS = [" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./code/project/settings.py
+    addreplacevalue "ALLOWED_HOSTS = [" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./app/project/settings.py
 
     STACK_MAIN_DOMAIN=$stackdomain \
-    MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
-    MYSQL_PASSWORD=$dbuserpassword \
-    RDS_PASSWORD=$dbuserpassword \
+    SB_MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
+    SB_MYSQL_PASSWORD=$dbuserpassword \
+    SB_RDS_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
     if [ ! -f .env ]; then 

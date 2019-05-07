@@ -3,11 +3,16 @@ FROM python:3.7
 #RUN apt-get update && apt-get install -y  python3 python3-pip libmysqlclient-dev python3-dev iputils-ping
 
 ENV PYTHONUNBUFFERED 1
-RUN mkdir /code
-WORKDIR /code
-COPY ./code/requirements.txt /code/
-COPY wait-for.sh /code/
-COPY ./code/ /code/
+RUN mkdir /workspace
+WORKDIR /workspace
+COPY ./app/requirements.txt /workspace/
+COPY wait-for.sh /workspace/
+COPY ./app/ /workspace/
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 #RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Clean up
+RUN apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,14 @@
+// See https://aka.ms/vscode-remote/containers for the
+// documentation about the devcontainer.json format
+{
+	"name": "Python 3 stackbuilder",
+    "dockerComposeFile": [
+        "../docker-compose.yml",
+        "docker-compose.extend.yml"
+    ],
+	"service": "app",
+	"workspaceFolder": "/workspace",
+	"extensions": [
+		"ms-python.python"
+	]
+}
