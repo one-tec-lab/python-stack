@@ -143,21 +143,22 @@ function stack-up {
         echo
     done
     echo
-    while true
-    do
-       read -s -p "Provide Django admin Password: " djangoadminpassword
-       djangoadminpassword="${djangoadminpassword:-$default_password}"
-       echo
-       read -s -p "Confirm Django admin Password: " password2
-       password2="${password2:-$default_password}"
-       echo
-       [ "$djangoadminpassword" = "$password2" ] && break
-       echo "Passwords don't match. Please try again."
-       echo
-    done
-    echo
 
-    echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.env
+    # while true
+    # do
+    #    read -s -p "Provide Django admin Password: " djangoadminpassword
+    #    djangoadminpassword="${djangoadminpassword:-$default_password}"
+    #    echo
+    #    read -s -p "Confirm Django admin Password: " password2
+    #    password2="${password2:-$default_password}"
+    #    echo
+    #    [ "$djangoadminpassword" = "$password2" ] && break
+    #    echo "Passwords don't match. Please try again."
+    #    echo
+    # done
+    # echo
+
+
 
     bash -c "cat > ./proxy/traefik.toml" <<-EOF
 debug = false
@@ -195,7 +196,15 @@ EOF
     RDS_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
-    docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
+    if [ ! -f .env ]; then 
+      echo "Creating Django Admin user"
+      echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.env
+      docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
+    else
+      echo "Not first run"
+    fi
+    docker-compose exec app python3 manage.py changepassword $admin_user
+
 }
 
 function stack-build {
@@ -203,7 +212,9 @@ function stack-build {
     docker-compose down --remove-orphans
 
 }
-
+function stack-clean-all {
+    docker system prune --all --force --volumes
+}
 function readvaluefromfile {
 
 
