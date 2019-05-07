@@ -69,7 +69,7 @@ services:
     #  - ./app:/workspace
     #command: ./wait-for.sh db:3306 --timeout=90 -- bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:8000"
     command: bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:80"
-    #command: python3 -m http.server 80
+    #command: python3 -m http.server 81
     depends_on:
       - db            
     labels:
