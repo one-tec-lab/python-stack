@@ -65,7 +65,7 @@ function stack-up {
   comment_acme_staging=" "
   comment_redirect="#"
   comment_acme="#"
-  default_password="changeme"
+  default_password="ch4ng3m3"
   default_host="localhost"
   default_admin_user="admin"
    # Get script arguments for non-interactive mode
@@ -208,11 +208,12 @@ EOF
 }
 
 function stack-build {
-    docker-compose run app django-admin startproject project .
-    docker-compose down --remove-orphans
-
+    #docker-compose run app django-admin startproject project .
+    #docker-compose down --remove-orphans
+    docker-compose build
 }
 function stack-clean-all {
+    rm -rf .env
     docker system prune --all --force --volumes
 }
 function readvaluefromfile {
