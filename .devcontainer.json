@@ -3,6 +3,6 @@
 {
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
-	"workspaceFolder": "/code/",
-	"extensions": []
+	"workspaceFolder": "/",
+	"extensions": ["ms-python.python"]
 }
