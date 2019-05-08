@@ -62,12 +62,15 @@ function update-stackbuilder {
 }
 
 function stack-up {
-  comment_acme_staging=" "
-  comment_redirect="#"
-  comment_acme="#"
-  default_password="ch4ng3m3"
-  default_host="localhost"
-  default_admin_user="admin"
+  local comment_acme_staging=" "
+  local comment_redirect="#"
+  local comment_acme="#"
+  local default_password="ch4ng3m3"
+  local default_host="localhost"
+  local default_admin_user="admin"
+  local mysqlrootpassword=""
+  local dbuserpassword=""
+  local password2=""
   # Get script arguments for non-interactive mode
   while [ "$1" != "" ]; do
       case $1 in
