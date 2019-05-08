@@ -330,3 +330,8 @@ ASALocalRun/
 .mfractor/
 
 *.DS_Store
+
+#stackbuilder ignores
+
+#saved env file
+.stackbuilder.env

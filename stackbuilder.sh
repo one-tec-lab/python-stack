@@ -194,9 +194,9 @@ EOF
     SB_RDS_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
-    if [ ! -f .env ]; then 
+    if [ ! -f .stackbuilder.env ]; then 
       echo "Creating Django Admin user"
-      echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.env
+      echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.stackbuilder.env
       docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
     else
       echo "Not first run"
