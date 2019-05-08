@@ -204,7 +204,7 @@ EOF
         db_log=$(docker-compose logs app 2>&1 | grep "Quit the server with CONTROL-C")
         if [ ${#db_log} -ne 0 ];then 
           echo "App server Ready. Waiting for container"
-          sleep 10
+          sleep 5
           break
         else 
           echo "..."
