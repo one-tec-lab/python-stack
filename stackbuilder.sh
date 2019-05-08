@@ -87,77 +87,65 @@ function stack-up {
       esac
       shift
   done
+  if [ ! -f .stackbuilder.env ]; then
+    while true
+    do
+        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+        mysqlrootpassword="${mysqlrootpassword:-$default_password}"
+        echo
+        read -s -p "Confirm MySQL ROOT Password: " password2
+        password2="${password2:-$default_password}"
+        echo
+        [ "$mysqlrootpassword" = "$password2" ] && break
+        echo "Passwords don't match. Please try again."
+        echo
+    done
+    echo
+    while true
+    do
+        read -s -p "Enter a database user Password: " dbuserpassword
+        dbuserpassword="${dbuserpassword:-$default_password}"
+        echo
+        read -s -p "Confirm database user Password: " password2
+        password2="${password2:-$default_password}"
+        echo
+        [ "$dbuserpassword" = "$password2" ] && break
+        echo "Passwords don't match. Please try again."
+        echo
+    done
+    echo
 
-  while true
-  do
-      read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
-      mysqlrootpassword="${mysqlrootpassword:-$default_password}"
-      echo
-      read -s -p "Confirm MySQL ROOT Password: " password2
-      password2="${password2:-$default_password}"
-      echo
-      [ "$mysqlrootpassword" = "$password2" ] && break
-      echo "Passwords don't match. Please try again."
-      echo
-  done
-  echo
-  while true
-  do
-      read -s -p "Enter a database user Password: " dbuserpassword
-      dbuserpassword="${dbuserpassword:-$default_password}"
-      echo
-      read -s -p "Confirm database user Password: " password2
-      password2="${password2:-$default_password}"
-      echo
-      [ "$dbuserpassword" = "$password2" ] && break
-      echo "Passwords don't match. Please try again."
-      echo
-  done
-  echo
 
+    while true
+    do
+        read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
+        stackdomain="${stackdomain:-$default_host}"
+        echo
+        [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
+        echo
+    done
 
-  while true
-  do
-      read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
-      stackdomain="${stackdomain:-$default_host}"
-      echo
-      [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
-      echo
-  done
+    while true
+    do
+        read  -p "Provide an admin user name (default: [$default_admin_user]): "  admin_user  
+        admin_user="${admin_user:-$default_admin_user}"
+        echo
+        [ -z "$admin_user" ] && echo "Please provide an admin user name" || break
+        echo
+    done
 
-  while true
-  do
-      read  -p "Provide an admin user name (default: [$default_admin_user]): "  admin_user  
-      admin_user="${admin_user:-$default_admin_user}"
-      echo
-      [ -z "$admin_user" ] && echo "Please provide an admin user name" || break
-      echo
-  done
-
-  while true
-  do
-      read  -p "Provide admin E-MAIL (ENTER for admin@mail.com): "  
-      admin_mail="${admin_mail:-admin@mail.com}"
-      echo
-      [ -z "$admin_mail" ] && echo "Please provide a valid mail for certs" || break
-      echo
-  done
-  echo
-
-  # while true
-  # do
-  #    read -s -p "Provide Django admin Password: " djangoadminpassword
-  #    djangoadminpassword="${djangoadminpassword:-$default_password}"
-  #    echo
-  #    read -s -p "Confirm Django admin Password: " password2
-  #    password2="${password2:-$default_password}"
-  #    echo
-  #    [ "$djangoadminpassword" = "$password2" ] && break
-  #    echo "Passwords don't match. Please try again."
-  #    echo
-  # done
-  # echo
-
+    while true
+    do
+        read  -p "Provide admin E-MAIL (ENTER for admin@mail.com): "  
+        admin_mail="${admin_mail:-admin@mail.com}"
+        echo
+        [ -z "$admin_mail" ] && echo "Please provide a valid mail for certs" || break
+        echo
+    done
+    echo
+  else
+    source .stackbuilder.env
+  fi 
   bash -c "cat > ./proxy/traefik.toml" <<-EOF
 debug = false
 logLevel = "ERROR"
@@ -194,9 +182,10 @@ EOF
     SB_RDS_PASSWORD=$dbuserpassword \
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
+
     if [ ! -f .stackbuilder.env ]; then 
       echo "Creating Django Admin user"
-      echo "STACK_MAIN_DOMAIN=$stackdomain" > ./.stackbuilder.env
+      echo "stackdomain=$stackdomain" > ./.stackbuilder.env
       docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
     else
       echo "Not first run"
