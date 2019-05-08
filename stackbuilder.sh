@@ -145,6 +145,7 @@ function stack-up {
     done
     echo
   else
+    echo "Using .stack.env"
     source .stack.env
   fi 
 
@@ -211,7 +212,7 @@ function stack-build {
     docker-compose build
 }
 function stack-clean-all {
-    rm -rf .env
+    rm -rf .stack.env
     docker system prune --all --force --volumes
 }
 function readvaluefromfile {
