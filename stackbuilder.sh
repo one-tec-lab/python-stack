@@ -68,99 +68,97 @@ function stack-up {
   default_password="ch4ng3m3"
   default_host="localhost"
   default_admin_user="admin"
-   # Get script arguments for non-interactive mode
-    while [ "$1" != "" ]; do
-       case $1 in
-           -m | --mysqlrootpwd )
-               shift
-               mysqlrootpwd="$1"
-               ;;
-           -a | --apidbpwd )
-               shift
-               apidbpwd="$1"
-               ;;
-           -d | --domain )
-               shift
-               $domain_name="$1"
-               ;;
+  # Get script arguments for non-interactive mode
+  while [ "$1" != "" ]; do
+      case $1 in
+          -m | --mysqlrootpwd )
+              shift
+              mysqlrootpwd="$1"
+              ;;
+          -a | --apidbpwd )
+              shift
+              apidbpwd="$1"
+              ;;
+          -d | --domain )
+              shift
+              $domain_name="$1"
+              ;;
 
-       esac
-       shift
-    done
-  
-    while true
-    do
-       read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
-       mysqlrootpassword="${mysqlrootpassword:-$default_password}"
-       echo
-       read -s -p "Confirm MySQL ROOT Password: " password2
-       password2="${password2:-$default_password}"
-       echo
-       [ "$mysqlrootpassword" = "$password2" ] && break
-       echo "Passwords don't match. Please try again."
-       echo
-    done
-    echo
-    while true
-    do
-       read -s -p "Enter a database user Password: " dbuserpassword
-       dbuserpassword="${dbuserpassword:-$default_password}"
-       echo
-       read -s -p "Confirm database user Password: " password2
-       password2="${password2:-$default_password}"
-       echo
-       [ "$dbuserpassword" = "$password2" ] && break
-       echo "Passwords don't match. Please try again."
-       echo
-    done
-    echo
+      esac
+      shift
+  done
 
-
-    while true
-    do
-        read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
-        stackdomain="${stackdomain:-$default_host}"
-        echo
-        [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
-        echo
-    done
-
-    while true
-    do
-        read  -p "Provide an admin user name (default: [$default_admin_user]): "  admin_user  
-        admin_user="${admin_user:-$default_admin_user}"
-        echo
-        [ -z "$admin_user" ] && echo "Please provide an admin user name" || break
-        echo
-    done
-
-    while true
-    do
-        read  -p "Provide admin E-MAIL (ENTER for admin@mail.com): "  
-        admin_mail="${admin_mail:-admin@mail.com}"
-        echo
-        [ -z "$admin_mail" ] && echo "Please provide a valid mail for certs" || break
-        echo
-    done
-    echo
-
-    # while true
-    # do
-    #    read -s -p "Provide Django admin Password: " djangoadminpassword
-    #    djangoadminpassword="${djangoadminpassword:-$default_password}"
-    #    echo
-    #    read -s -p "Confirm Django admin Password: " password2
-    #    password2="${password2:-$default_password}"
-    #    echo
-    #    [ "$djangoadminpassword" = "$password2" ] && break
-    #    echo "Passwords don't match. Please try again."
-    #    echo
-    # done
-    # echo
+  while true
+  do
+      read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
+      mysqlrootpassword="${mysqlrootpassword:-$default_password}"
+      echo
+      read -s -p "Confirm MySQL ROOT Password: " password2
+      password2="${password2:-$default_password}"
+      echo
+      [ "$mysqlrootpassword" = "$password2" ] && break
+      echo "Passwords don't match. Please try again."
+      echo
+  done
+  echo
+  while true
+  do
+      read -s -p "Enter a database user Password: " dbuserpassword
+      dbuserpassword="${dbuserpassword:-$default_password}"
+      echo
+      read -s -p "Confirm database user Password: " password2
+      password2="${password2:-$default_password}"
+      echo
+      [ "$dbuserpassword" = "$password2" ] && break
+      echo "Passwords don't match. Please try again."
+      echo
+  done
+  echo
 
 
+  while true
+  do
+      read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
+      stackdomain="${stackdomain:-$default_host}"
+      echo
+      [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
+      echo
+  done
 
-    bash -c "cat > ./proxy/traefik.toml" <<-EOF
+  while true
+  do
+      read  -p "Provide an admin user name (default: [$default_admin_user]): "  admin_user  
+      admin_user="${admin_user:-$default_admin_user}"
+      echo
+      [ -z "$admin_user" ] && echo "Please provide an admin user name" || break
+      echo
+  done
+
+  while true
+  do
+      read  -p "Provide admin E-MAIL (ENTER for admin@mail.com): "  
+      admin_mail="${admin_mail:-admin@mail.com}"
+      echo
+      [ -z "$admin_mail" ] && echo "Please provide a valid mail for certs" || break
+      echo
+  done
+  echo
+
+  # while true
+  # do
+  #    read -s -p "Provide Django admin Password: " djangoadminpassword
+  #    djangoadminpassword="${djangoadminpassword:-$default_password}"
+  #    echo
+  #    read -s -p "Confirm Django admin Password: " password2
+  #    password2="${password2:-$default_password}"
+  #    echo
+  #    [ "$djangoadminpassword" = "$password2" ] && break
+  #    echo "Passwords don't match. Please try again."
+  #    echo
+  # done
+  # echo
+
+  bash -c "cat > ./proxy/traefik.toml" <<-EOF
 debug = false
 logLevel = "ERROR"
 defaultEntryPoints = ["https","http"]
