@@ -87,7 +87,18 @@ function stack-up {
       esac
       shift
   done
-  if [ ! -f .stackbuilder.env ]; then
+
+  if [ ! -f .stack.env ]; then
+
+    while true
+    do
+        read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
+        stackdomain="${stackdomain:-$default_host}"
+        echo
+        [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
+        echo
+    done
+
     while true
     do
         read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
@@ -115,16 +126,6 @@ function stack-up {
     done
     echo
 
-
-    while true
-    do
-        read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
-        stackdomain="${stackdomain:-$default_host}"
-        echo
-        [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
-        echo
-    done
-
     while true
     do
         read  -p "Provide an admin user name (default: [$default_admin_user]): "  admin_user  
@@ -144,8 +145,9 @@ function stack-up {
     done
     echo
   else
-    source .stackbuilder.env
+    source .stack.env
   fi 
+
   bash -c "cat > ./proxy/traefik.toml" <<-EOF
 debug = false
 logLevel = "ERROR"
@@ -183,14 +185,23 @@ EOF
     CURRENT_UID=$(id -u):$(id -g) \
     docker-compose up -d
 
-    if [ ! -f .stackbuilder.env ]; then 
+    if [ ! -f .stack.env ]; then 
+      # Sleep to let MySQL load (there's probably a better way to do this)
+      echo
+      echo "Waiting 40 seconds for MySQL to load for first time"
+      sleep 40
+      echo
       echo "Creating Django Admin user"
-      echo "stackdomain=$stackdomain" > ./.stackbuilder.env
+      echo "stackdomain=$stackdomain" >> ./.stack.env
+      echo "mysqlrootpassword=$mysqlrootpassword" >> ./.stack.env
+      echo "dbuserpassword=$dbuserpassword" >> ./.stack.env
+      echo "admin_user=$admin_user" >> ./.stack.env
       docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
+      docker-compose exec app python3 manage.py changepassword $admin_user
     else
       echo "Not first run"
     fi
-    docker-compose exec app python3 manage.py changepassword $admin_user
+
 
 }
 

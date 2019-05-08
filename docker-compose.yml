@@ -14,7 +14,7 @@ volumes:
 
 services:
   reverse-proxy:
-    container_name: proxy
+    #container_name: proxy
     image: traefik # The official Traefik docker image
     command: --api --docker # Enables the web UI and tells Traefik to listen to docker
     restart: always
@@ -35,7 +35,7 @@ services:
 
 
   portainer:
-    container_name: portainer
+    #container_name: portainer
     image: portainer/portainer
     command: -H unix:///var/run/docker.sock
     restart: always
