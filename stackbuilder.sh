@@ -198,11 +198,12 @@ EOF
 
       while true
       do
-        echo "Waiting MySQL to load for first time..."
-        sleep 5
-        db_log=$(docker-compose logs db 2>&1 | grep "port: 3306  MySQL Community Server")
+        echo "Waiting for app to connect to DB for first time..."
+        sleep 10
+        ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
+        db_log=$(docker-compose logs app 2>&1 | grep "Quit the server with CONTROL-C")
         if [ ${#db_log} -ne 0 ];then 
-          echo "Mysql Ready. Waiting for container"
+          echo "App server Ready. Waiting for container"
           sleep 10
           break
         else 
