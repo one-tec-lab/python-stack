@@ -177,7 +177,7 @@ $comment_acme   [acme.httpChallenge]
 $comment_acme      entryPoint = "http"
 EOF
 
-    addreplacevalue "ALLOWED_HOSTS = [" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./app/project/settings.py
+    addreplacevalue "ALLOWED_HOSTS =" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./app/project/settings.py
 
     STACK_MAIN_DOMAIN=$stackdomain \
     SB_MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
@@ -189,14 +189,27 @@ EOF
     if [ ! -f .stack.env ]; then 
       # Sleep to let MySQL load (there's probably a better way to do this)
       echo
-      echo "Waiting 40 seconds for MySQL to load for first time"
-      sleep 40
       echo
       echo "Creating Django Admin user"
       echo "stackdomain=$stackdomain" >> ./.stack.env
       echo "mysqlrootpassword=$mysqlrootpassword" >> ./.stack.env
       echo "dbuserpassword=$dbuserpassword" >> ./.stack.env
       echo "admin_user=$admin_user" >> ./.stack.env
+
+      while true
+      do
+        echo "Waiting MySQL to load for first time..."
+        sleep 5
+        db_log=$(docker-compose logs db 2>&1 | grep "port: 3306  MySQL Community Server")
+        if [ ${#db_log} -ne 0 ];then 
+          echo "Mysql Ready. Waiting for container"
+          sleep 10
+          break
+        else 
+          echo "..."
+        fi
+      done
+
       docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
       docker-compose exec app python3 manage.py changepassword $admin_user
     else
