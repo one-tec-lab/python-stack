@@ -71,6 +71,7 @@ function stack-up {
   local mysqlrootpassword=""
   local dbuserpassword=""
   local password2=""
+  local admin_mail=""
   # Get script arguments for non-interactive mode
   while [ "$1" != "" ]; do
       case $1 in
@@ -198,6 +199,7 @@ EOF
       echo "mysqlrootpassword=$mysqlrootpassword" >> ./.stack.env
       echo "dbuserpassword=$dbuserpassword" >> ./.stack.env
       echo "admin_user=$admin_user" >> ./.stack.env
+      echo "admin_mail=$admin_mail" >> ./.stack.env
 
       while true
       do
