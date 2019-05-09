@@ -34,6 +34,23 @@ services:
       - "traefik.enable=false"
 
 
+  nginx-proxy:
+    build: ./nginx
+    restart: always    
+    networks:
+      - sb_public
+      - sb_internal
+    ports:
+      - '127.0.0.1:8080:8080'
+      - '127.0.0.1:8443:8443'
+    volumes:
+      - ./nginx/static:/app
+      - ./nginx/certs_stack:/opt/bitnami/certs_stack
+      #- ./nginx/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
+      - ./nginx/sb_block.conf:/opt/bitnami/nginx/conf/server_blocks/sb_block.conf:ro
+    depends_on:
+      - app
+
   portainer:
     #container_name: portainer
     image: portainer/portainer
@@ -63,12 +80,12 @@ services:
     networks:
       - sb_internal
     ports:
-      - "127.0.0.1:20080:80"
+      - "127.0.0.1:20080:20080"
     #No local folders for volumes in prod. 
     #volumes:
     #  - ./app:/workspace
     #command: ./wait-for.sh db:3306 --timeout=90 -- bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:8000"
-    command: bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:80"
+    command: bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:20080"
     #command: python3 -m http.server 81
     depends_on:
       - db            
@@ -77,11 +94,12 @@ services:
       - "traefik.backend=app"
       - "traefik.docker.network=sb_public"
       - "traefik.frontend.rule=Host:${STACK_MAIN_DOMAIN:-localhost}"
-      - "traefik.port=80"   
+      - "traefik.port=20080"   
 
   db:
     #container_name: db
-    image: mysql:5.7.26
+    #image: mysql:5.7.26
+    image: bitnami/mysql:5.7
     restart: always
     environment:
       MYSQL_DATABASE: stack_db
@@ -98,24 +116,27 @@ services:
       - "127.0.0.1:23306:3306"
       # Where our data will be persisted
     volumes:
-      - data-db:/var/lib/mysql
+      #regular mysql
+      #- data-db:/var/lib/mysql
+      #bitnami mysql
+      - data-db:/bitnami/mysql/data
     labels:
       - traefik.enable=false      
 
-  # phpmyadmin:
-  #   depends_on:
-  #     - db
-  #   image: phpmyadmin/phpmyadmin
-  #   restart: always
-  #   ports:
-  #     - '127.0.0.1:28080:80'
-  #   environment:
-  #     PMA_HOST: db
-  #     MYSQL_ROOT_PASSWORD: ${SB_MYSQL_ROOT_PASSWORD:-ch4ng3m3}
-  #   networks:
-  #     - sb_internal
-  #   labels:
-  #     - "traefik.enable=false"
+  phpmyadmin:
+    depends_on:
+      - db
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - '127.0.0.1:28080:80'
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${SB_MYSQL_ROOT_PASSWORD:-ch4ng3m3}
+    networks:
+      - sb_internal
+    labels:
+      - "traefik.enable=false"
 
   # postgres:
   #   container_name: postgres_container

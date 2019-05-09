@@ -218,11 +218,39 @@ EOF
 
       docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
       docker-compose exec app python3 manage.py changepassword $admin_user
+
     else
       echo "Not first run"
     fi
 
 
+}
+
+function stack-nginx-self-cert {
+  local param_subj="$2"
+  local param_domain="$1"
+
+  #local env_domain=$(readvaluefromfile stackdomain .stack.env)
+  local subj_str="/C=US/ST=CA/L=SF/O=Dis/CN=$param_domain"
+  if [[ !  -z  $param_subj  ]];then
+    subj_str="$param_subj"
+  fi
+  echo "Creating self-signed certificate for $param_domain"
+  echo "Subject: $subj_str" 
+  docker-compose exec -u 0 nginx-proxy bash -c "openssl req -x509 -nodes -days 1000 -newkey rsa:2048 -subj '$subj_str' -keyout /opt/bitnami/certs_stack/nginx-selfsigned.key -out /opt/bitnami/certs_stack/nginx-selfsigned.crt"
+  addreplacevalue "ssl_certificate /opt/bitnami/certs" "ssl_certificate /opt/bitnami/certs_stack/nginx-selfsigned.crt;" ./nginx/sb_block.conf
+  addreplacevalue "ssl_certificate_key /opt/bitnami/certs" "ssl_certificate_key /opt/bitnami/certs_stack/nginx-selfsigned.key;" ./nginx/sb_block.conf
+  addreplacevalue "#sb_replace_sb_domain" "server_name $param_domain www.$param_domain; #sb_replace_sb_domain" ./nginx/sb_block.conf
+  #echo "Creating Diffie-Helman dhparam"
+  #docker-compose exec nginx-proxy exec -u 0 nginx-proxy bash -c "openssl dhparam -out /opt/bitnami/certs_stack/dhparam.pem 2048"
+  addreplacevalue "ssl_dhparam /opt/bitnami/certs" "#ssl_dhparam /opt/bitnami/certs_stack/dhparam.pem;" ./nginx/sb_block.conf
+
+}
+
+function stack-nginx-default-conf {
+  addreplacevalue "ssl_dhparam /opt/bitnami/certs" "#ssl_dhparam /opt/bitnami/certs/dhparam.pem;" ./nginx/sb_block.conf
+  addreplacevalue "ssl_certificate /opt/bitnami/certs" "ssl_certificate /opt/bitnami/certs/server.crt;" ./nginx/sb_block.conf
+  addreplacevalue "ssl_certificate_key /opt/bitnami/certs" "ssl_certificate_key /opt/bitnami/certs/server.key;" ./nginx/sb_block.conf
 }
 
 function stack-build {
@@ -234,16 +262,15 @@ function stack-clean-all {
     rm -rf .stack.env
     docker system prune --all --force --volumes
 }
+
 function readvaluefromfile {
+   local file="$2"
+   local label="$1"
 
-
-   file="$2"
-   label="$1"
-
-   listalineas=""
-   linefound=0
-   value_found=""       
-   listalineas=$(cat $file)
+   local listalineas=""
+   local linefound=0
+   local value_found=""       
+   local listalineas=$(cat $file)
    if [[ !  -z  $listalineas  ]];then
      #echo "buscando lineas existentes con:"
      #echo "$nuevacad"
@@ -265,14 +292,14 @@ function readvaluefromfile {
 
 function addreplacevalue {
 
-   usesudo="$4"
-   archivo="$3"
-   nuevacad="$2"
-   buscar="$1"
-   temporal="$archivo.tmp.kalan"
-   listalineas=""
-   linefound=0       
-   listalineas=$(cat $archivo)
+   local usesudo="$4"
+   local archivo="$3"
+   local nuevacad="$2"
+   local buscar="$1"
+   local temporal="$archivo.sb.tmp"
+   local listalineas=""
+   local linefound=0       
+   local listalineas=$(cat $archivo)
    if [[ !  -z  $listalineas  ]];then
      #echo "buscando lineas existentes con:"
      #echo "$nuevacad"
