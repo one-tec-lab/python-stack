@@ -335,3 +335,5 @@ ASALocalRun/
 
 #saved env file
 .stack.env
+nginx-selfsigned.crt
+nginx-selfsigned.key
