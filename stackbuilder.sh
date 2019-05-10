@@ -120,15 +120,13 @@ function stackb {
               docker-compose up -d --force-recreate --no-deps --build $sb_container
               return
               ;;
-          --prune ) 
+          --prune_all ) 
               stack-clean-all
               return
               ;;
       esac
       shift
   done
-
-
 
   if [ -z  $sb_db_sec_0  ] || [ $first_run == 1 ];then
     while true
@@ -209,18 +207,7 @@ function stackb {
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \
     CURRENT_UID=$(id -u):$(id -g) \
-    docker-compose up -d
-  else
-    echo "Normal startup..."
-    STACK_MAIN_DOMAIN=$stackdomain \
-    SB_MYSQL_PASSWORD=$sb_db_sec_1 \
-    SB_RDS_PASSWORD=$sb_db_sec_1 \
-    CURRENT_UID=$(id -u):$(id -g) \
-    docker-compose up -d
-
-  fi
-
-  if [ ! -f .stack.env ]; then 
+    docker-compose up -d --build
     # Sleep to let MySQL load (there's probably a better way to do this)
     echo
     echo
@@ -243,9 +230,18 @@ function stackb {
 
     docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
     docker-compose exec app python3 manage.py changepassword $admin_user
+    
+  else
+    echo "Normal startup..."
+    STACK_MAIN_DOMAIN=$stackdomain \
+    SB_MYSQL_PASSWORD=$sb_db_sec_1 \
+    SB_RDS_PASSWORD=$sb_db_sec_1 \
+    CURRENT_UID=$(id -u):$(id -g) \
+    docker-compose up -d
 
   fi
-  
+
+
 }
 
 
@@ -255,7 +251,6 @@ function stack-traefik-configure {
   local comment_acme="#"
   local stackdomain=$(readvaluefromfile stackdomain .stack.env)
   local admin_mail=$(readvaluefromfile admin_mail .stack.env)
-
 
   bash -c "cat > ./proxy/traefik.toml" <<-EOF
 debug = false
@@ -286,6 +281,7 @@ $comment_acme      entryPoint = "http"
 EOF
 addreplacevalue "ALLOWED_HOSTS =" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./app/project/settings.py
 }
+
 function stack-domain-configure {
   while [ "$1" != "" ]; do
       case $1 in
@@ -339,8 +335,17 @@ function stack-build {
     docker-compose build
 }
 function stack-clean-all {
+  local confirm_action=""
+  echo "CAUTION: This action will delete all containes and data volumes"
+  echo
+  read  -p "Are you sure you want to delete all containters and data? (y/N) "  confirm_action  
+  confirm_action="${confirm_action:-n}"
+
+  if [ "$confirm_action" == "y" ];then
+    docker-compose down
     rm -rf .stack.env
     docker system prune --all --force --volumes
+  fi
 }
 
 function readvaluefromfile {
