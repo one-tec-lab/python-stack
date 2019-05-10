@@ -100,10 +100,17 @@ function stackb {
               return
               ;;
           --build )
-              docker-compose build
+              stack-build
+              ;;
+          --recreate )
+              shift
+              local sb_container="$1"
+              
+              docker-compose up -d --force-recreate --build $sb_container
               ;;
           --prune ) 
               stack-clean-all
+              return
               ;;
       esac
       shift
