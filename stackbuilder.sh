@@ -211,23 +211,29 @@ function stackb {
     # Sleep to let MySQL load (there's probably a better way to do this)
     echo
     echo
-    echo "Creating Django Admin user"
 
-    echo "Waiting for app to connect to DB for first time..."
+
+    echo "Connecting app to DB for first time. Please wait..."
+    local step_count=1    
     while true
     do
-      sleep 10
       ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
+      echo "Reading logs..."
       local app_log=$(docker-compose logs app 2>&1 | grep "Quit the server with CONTROL-C")
+
+
       if [ ${#app_log} -ne 0 ];then 
-        echo "App server Ready. Waiting for container"
-        sleep 5
+        echo "App server Ready. Waiting for container (5 secs)..."
+        tickforseconds 5
         break
       else 
-        echo "..."
+
+        echo  "Step: $step_count "
+        tickforseconds 20
+        step_count=$(( $step_count + 1 ))
       fi
     done
-
+    echo "Creating Django Admin user"
     docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
     docker-compose exec app python3 manage.py changepassword $admin_user
     
@@ -244,6 +250,21 @@ function stackb {
 
 }
 
+function tickforseconds {
+  local tick=1
+  local wait_seconds=$1
+  while true
+  do
+    sleep 1
+    echo  -ne "."
+    if [ $tick -gt $wait_seconds ]; then
+      break
+    fi
+    tick=$(( $tick + 1 ))
+  done
+  echo
+
+}
 
 function stack-traefik-configure {
   local comment_acme_staging=" "
