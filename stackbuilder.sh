@@ -62,6 +62,7 @@ function update-stackbuilder {
 }
 
 function stackb {
+  local full_params=$@
   local stackdomain=""
   local default_host="localhost"
   local default_admin_user="admin"
@@ -71,7 +72,10 @@ function stackb {
   local password2=""
   local admin_mail=""
   local first_run=1
-
+  local spec_container=""
+  local spec_params=""
+  local compose_cmd="up -d"
+  echo "Executing : stackb $full_params"
   if [ -f .stack.env ]; then
     echo "Using .stack.env"
     source .stack.env
@@ -86,6 +90,7 @@ function stackb {
           -b | --bash )
               shift
               local sb_container="$1"
+              echo "Connecting bash to container [$sb_container]. Type 'exit' to quit"
               docker-compose exec $sb_container bash
               return
               ;;
@@ -108,17 +113,39 @@ function stackb {
               stackdomain="$1"
               ;;
           -z | --down )
-              docker-compose down
-              return
+              compose_cmd="down"
+              spec_container="$2"
+              if [ "$spec_container" == "-"* ] || [ -z  "$spec_container"  ]; then
+                echo "all containers"
+                spec_container=""
+              else
+                shift
+              fi              
+              ;;            
+          down )
+              compose_cmd="down"
+              shift
+              spec_container="$@"
+              ;;
+          stop )
+              compose_cmd="stop"
+              shift
+              spec_container="$@"
+              ;;              
+          up )
+              compose_cmd="up -d"
+              shift
+              spec_container="$@"
               ;;
           --build )
               stack-build
               ;;
-          --recreate )
+          recreate )
               shift
-              local sb_container="$1"
-              docker-compose up -d --force-recreate --no-deps --build $sb_container
-              return
+              spec_container="$@"
+              spec_params="--no-deps --build"
+              docker-compose stop $spec_container
+              docker-compose rm -f $spec_container
               ;;
           --prune_all ) 
               stack-clean-all
@@ -218,17 +245,14 @@ function stackb {
     while true
     do
       ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
-      echo "Reading logs..."
+      echo "Step $step_count : Reading logs... "
+      echo "Reading logs"
       local app_log=$(docker-compose logs app 2>&1 | grep "Quit the server with CONTROL-C")
-
-
       if [ ${#app_log} -ne 0 ];then 
         echo "App server Ready. Waiting for container (5 secs)..."
         tickforseconds 5
         break
       else 
-
-        echo  "Step: $step_count "
         tickforseconds 20
         step_count=$(( $step_count + 1 ))
       fi
@@ -238,18 +262,20 @@ function stackb {
     docker-compose exec app python3 manage.py changepassword $admin_user
     
   else
-    echo "Normal startup..."
+    echo "EXECUTING Compose Params:[${spec_params:-default}] Container(s):[${spec_container:-all}]"
     STACK_MAIN_DOMAIN=$stackdomain \
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \
     CURRENT_UID=$(id -u):$(id -g) \
-    docker-compose up -d
+    docker-compose $compose_cmd $spec_params $spec_container
 
   fi
-
+  echo "Stackb completed."
 
 }
-
+function echoline {
+  echo "-----------------------------------------------------------------------"
+}
 function tickforseconds {
   local tick=1
   local wait_seconds=$1
