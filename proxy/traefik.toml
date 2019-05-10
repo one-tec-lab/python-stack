@@ -17,7 +17,7 @@ watch = true
 exposedByDefault = false
 # [acme]
 #    caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
-#   email = ""
+#   email = "admin@mail.com"
 #   storage = "acme/certs.json"
 #   entryPoint = "https"
 #   onHostRule = true

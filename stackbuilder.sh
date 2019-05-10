@@ -61,75 +61,88 @@ function update-stackbuilder {
    echo "Stack utilities updated to $SB_VERSION"
 }
 
-function stack-up {
-  local comment_acme_staging=" "
-  local comment_redirect="#"
-  local comment_acme="#"
-  local default_password="ch4ng3m3"
+function stackb {
+  local stackdomain=""
   local default_host="localhost"
   local default_admin_user="admin"
-  local mysqlrootpassword=""
-  local dbuserpassword=""
+  local sb_db_sec_0=""
+  local sb_db_sec_1=""
+  local sb_db_sec_0_def="ch4ng3m3"
   local password2=""
   local admin_mail=""
+  local first_run=1
+
+  if [ -f .stack.env ]; then
+    echo "Using .stack.env"
+    source .stack.env
+    first_run=0
+  else 
+    first_run=1
+  fi
+
   # Get script arguments for non-interactive mode
   while [ "$1" != "" ]; do
       case $1 in
-          -m | --mysqlrootpwd )
+          --mysqlrootpwd )
               shift
-              mysqlrootpwd="$1"
+              sb_db_sec_0="$1"
               ;;
-          -a | --apidbpwd )
+          --dbuserpwd )
               shift
-              apidbpwd="$1"
+              sb_db_sec_1="$1"
               ;;
           -d | --domain )
               shift
-              $domain_name="$1"
+              stackdomain="$1"
               ;;
-
+          -z | --down )
+              docker-compose down
+              return
+              ;;
+          --build )
+              docker-compose build
+              ;;
+          --prune ) 
+              stack-clean-all
+              ;;
       esac
       shift
   done
 
-  if [ ! -f .stack.env ]; then
 
+
+  if [ -z  $sb_db_sec_0  ] || [ $first_run == 1 ];then
     while true
     do
-        read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
-        stackdomain="${stackdomain:-$default_host}"
-        echo
-        [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
-        echo
-    done
-
-    while true
-    do
-        read -s -p "Enter a MySQL ROOT Password: " mysqlrootpassword
-        mysqlrootpassword="${mysqlrootpassword:-$default_password}"
+        read -s -p "Enter a MySQL ROOT Password: " sb_db_sec_0
+        sb_db_sec_0="${sb_db_sec_0:-$sb_db_sec_0_def}"
         echo
         read -s -p "Confirm MySQL ROOT Password: " password2
-        password2="${password2:-$default_password}"
+        password2="${password2:-$sb_db_sec_0_def}"
         echo
-        [ "$mysqlrootpassword" = "$password2" ] && break
+        [ "$sb_db_sec_0" = "$password2" ] && break
         echo "Passwords don't match. Please try again."
         echo
     done
     echo
+  fi
+  if [[ -z  $sb_db_sec_1  ]];then
     while true
     do
-        read -s -p "Enter a database user Password: " dbuserpassword
-        dbuserpassword="${dbuserpassword:-$default_password}"
+        read -s -p "Enter a database user Password: " sb_db_sec_1
+        sb_db_sec_1="${sb_db_sec_1:-$sb_db_sec_0_def}"
         echo
         read -s -p "Confirm database user Password: " password2
-        password2="${password2:-$default_password}"
+        password2="${password2:-$sb_db_sec_0_def}"
         echo
-        [ "$dbuserpassword" = "$password2" ] && break
+        [ "$sb_db_sec_1" = "$password2" ] && break
         echo "Passwords don't match. Please try again."
         echo
     done
     echo
+  fi
 
+  if [[ -z  $admin_user  ]];then
     while true
     do
         read  -p "Provide an admin user name (default: [$default_admin_user]): "  admin_user  
@@ -138,7 +151,19 @@ function stack-up {
         [ -z "$admin_user" ] && echo "Please provide an admin user name" || break
         echo
     done
+  fi
 
+  if [[ -z  $stackdomain  ]];then
+    while true
+    do
+        read  -p "Provide a DOMAIN (default: [$default_host]): "  stackdomain  
+        stackdomain="${stackdomain:-$default_host}"
+        echo
+        [ -z "$stackdomain" ] && echo "Please provide a DOMAIN" || break
+        echo
+    done
+  fi
+  if [[ -z  $admin_mail  ]];then
     while true
     do
         read  -p "Provide admin E-MAIL (ENTER for admin@mail.com): "  
@@ -148,10 +173,80 @@ function stack-up {
         echo
     done
     echo
+  fi
+
+
+  
+  if [ $first_run == 1 ]; then
+    echo "stackdomain=$stackdomain" >> ./.stack.env
+    echo "sb_db_sec_0=$sb_db_sec_0" >> ./.stack.env
+    echo "sb_db_sec_1=$sb_db_sec_1" >> ./.stack.env
+    echo "admin_user=$admin_user" >> ./.stack.env
+    echo "admin_mail=$admin_mail" >> ./.stack.env
+
+    echo "First Run Configuration..."
+    STACK_MAIN_DOMAIN=$stackdomain \
+    SB_MYSQL_ROOT_PASSWORD=$sb_db_sec_0 \
+    SB_MYSQL_PASSWORD=$sb_db_sec_1 \
+    SB_RDS_PASSWORD=$sb_db_sec_1 \
+    CURRENT_UID=$(id -u):$(id -g) \
+    docker-compose up -d
   else
-    echo "Using .stack.env"
-    source .stack.env
-  fi 
+    echo "Normal startup..."
+    STACK_MAIN_DOMAIN=$stackdomain \
+    SB_MYSQL_PASSWORD=$sb_db_sec_1 \
+    SB_RDS_PASSWORD=$sb_db_sec_1 \
+    CURRENT_UID=$(id -u):$(id -g) \
+    docker-compose up -d
+
+  fi
+
+  if [ ! -f .stack.env ]; then 
+    # Sleep to let MySQL load (there's probably a better way to do this)
+    echo
+    echo
+    echo "Creating Django Admin user"
+
+    echo "Waiting for app to connect to DB for first time..."
+    while true
+    do
+      sleep 10
+      ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
+      local app_log=$(docker-compose logs app 2>&1 | grep "Quit the server with CONTROL-C")
+      if [ ${#app_log} -ne 0 ];then 
+        echo "App server Ready. Waiting for container"
+        sleep 5
+        break
+      else 
+        echo "..."
+      fi
+    done
+
+    docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
+    docker-compose exec app python3 manage.py changepassword $admin_user
+
+  fi
+  
+}
+
+function stack-configure {
+  local stackdomain=""
+  local default_host="localhost"
+  local default_admin_user="admin"
+  local sb_db_sec_0=""
+  local sb_db_sec_1=""
+  local sb_db_sec_0_def="ch4ng3m3"
+  local password2=""
+  local admin_mail=""
+  
+}
+function stack-traefik-configure {
+  local comment_acme_staging=" "
+  local comment_redirect="#"
+  local comment_acme="#"
+  local stackdomain=$(readvaluefromfile stackdomain .stack.env)
+  local admin_mail=$(readvaluefromfile admin_mail .stack.env)
+
 
   bash -c "cat > ./proxy/traefik.toml" <<-EOF
 debug = false
@@ -180,50 +275,26 @@ $comment_acme   onHostRule = true
 $comment_acme   [acme.httpChallenge]
 $comment_acme      entryPoint = "http"
 EOF
-
-    addreplacevalue "ALLOWED_HOSTS =" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./app/project/settings.py
-
-    STACK_MAIN_DOMAIN=$stackdomain \
-    SB_MYSQL_ROOT_PASSWORD=$mysqlrootpassword \
-    SB_MYSQL_PASSWORD=$dbuserpassword \
-    SB_RDS_PASSWORD=$dbuserpassword \
-    CURRENT_UID=$(id -u):$(id -g) \
-    docker-compose up -d
-
-    if [ ! -f .stack.env ]; then 
-      # Sleep to let MySQL load (there's probably a better way to do this)
-      echo
-      echo
-      echo "Creating Django Admin user"
-      echo "stackdomain=$stackdomain" >> ./.stack.env
-      echo "mysqlrootpassword=$mysqlrootpassword" >> ./.stack.env
-      echo "dbuserpassword=$dbuserpassword" >> ./.stack.env
-      echo "admin_user=$admin_user" >> ./.stack.env
-      echo "admin_mail=$admin_mail" >> ./.stack.env
-
-      while true
-      do
-        echo "Waiting for app to connect to DB for first time..."
-        sleep 10
-        ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
-        db_log=$(docker-compose logs app 2>&1 | grep "Quit the server with CONTROL-C")
-        if [ ${#db_log} -ne 0 ];then 
-          echo "App server Ready. Waiting for container"
-          sleep 5
-          break
-        else 
-          echo "..."
-        fi
-      done
-
-      docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
-      docker-compose exec app python3 manage.py changepassword $admin_user
-
-    else
-      echo "Not first run"
-    fi
-
-
+addreplacevalue "ALLOWED_HOSTS =" "ALLOWED_HOSTS = ['$stackdomain','127.0.0.1']" ./app/project/settings.py
+}
+function stack-domain-configure {
+  while [ "$1" != "" ]; do
+      case $1 in
+          -m | --mysqlrootpwd )
+              shift
+              sb_db_sec_0="$1"
+              ;;
+          -a | --apidbpwd )
+              shift
+              apidbpwd="$1"
+              ;;
+          -d | --domain )
+              shift
+              $stackdomain="$1"
+              ;;
+      esac
+      shift
+  done  
 }
 
 function stack-nginx-self-cert {
