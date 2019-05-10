@@ -83,6 +83,12 @@ function stackb {
   # Get script arguments for non-interactive mode
   while [ "$1" != "" ]; do
       case $1 in
+          -b | --bash )
+              shift
+              local sb_container="$1"
+              docker-compose exec $sb_container bash
+              return
+              ;;
           --mysqlrootpwd )
               shift
               sb_db_sec_0="$1"
@@ -105,8 +111,8 @@ function stackb {
           --recreate )
               shift
               local sb_container="$1"
-
               docker-compose up -d --force-recreate --no-deps --build $sb_container
+              return
               ;;
           --prune ) 
               stack-clean-all
