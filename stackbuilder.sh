@@ -137,7 +137,7 @@ function stackb {
               shift
               spec_container="$@"
               ;;
-          --build )
+          build )
               stack-build
               ;;
           recreate )
