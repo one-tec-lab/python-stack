@@ -105,8 +105,8 @@ function stackb {
           --recreate )
               shift
               local sb_container="$1"
-              
-              docker-compose up -d --force-recreate --build $sb_container
+
+              docker-compose up -d --force-recreate --no-deps --build $sb_container
               ;;
           --prune ) 
               stack-clean-all
