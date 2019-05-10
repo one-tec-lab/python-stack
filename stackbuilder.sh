@@ -89,6 +89,12 @@ function stackb {
               docker-compose exec $sb_container bash
               return
               ;;
+          -l | --logs )
+              shift
+              local sb_container="$@"
+              docker-compose logs $sb_container
+              return
+              ;;
           --mysqlrootpwd )
               shift
               sb_db_sec_0="$1"
@@ -242,17 +248,7 @@ function stackb {
   
 }
 
-function stack-configure {
-  local stackdomain=""
-  local default_host="localhost"
-  local default_admin_user="admin"
-  local sb_db_sec_0=""
-  local sb_db_sec_1=""
-  local sb_db_sec_0_def="ch4ng3m3"
-  local password2=""
-  local admin_mail=""
-  
-}
+
 function stack-traefik-configure {
   local comment_acme_staging=" "
   local comment_redirect="#"
