@@ -51,20 +51,20 @@ services:
     depends_on:
       - app
 
-  portainer:
-    #container_name: portainer
-    image: portainer/portainer
-    command: -H unix:///var/run/docker.sock
-    restart: always
-    networks:
-      - sb_public
-    ports:
-      - "127.0.0.1:29000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - data-portainer:/data
-    labels:
-      - "traefik.enable=false"
+  # portainer:
+  #   #container_name: portainer
+  #   image: portainer/portainer
+  #   command: -H unix:///var/run/docker.sock
+  #   restart: always
+  #   networks:
+  #     - sb_public
+  #   ports:
+  #     - "127.0.0.1:29000:9000"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - data-portainer:/data
+  #   labels:
+  #     - "traefik.enable=false"
 
   app:
     build: .

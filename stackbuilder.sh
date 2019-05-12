@@ -19,7 +19,7 @@
 export SB_VERSION="4.1.1"
 validbash=0
 os=${OSTYPE//[0-9.-]*/}
-echo "Stackbuilder v $SB_VERSION $(date -r ~/stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
+echo "Stackbuilder v $SB_VERSION $(date -r stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
 case "$os" in
   darwin)
     echo "I'm in a Mac"
@@ -53,7 +53,7 @@ function update-stackbuilder {
       echo "updating stackbuilder script for bash"
       cat ./stackbuilder.sh > ~/stackbuilder.sh
       #add source line if not in .bashrc
-      grep -qxF 'source ~/stackbuilder.sh' ~/.bashrc || echo 'source ~/stackbuilder.sh' >> ~/.bashrc
+      grep -qxF 'source stackbuilder.sh' ~/.bashrc || echo 'source stackbuilder.sh' >> ~/.bashrc
       source ./stackbuilder.sh 
    else
     echo "You need to be inside a valid stackbuilder project and bash terminal"
@@ -62,6 +62,7 @@ function update-stackbuilder {
 }
 
 function stackb {
+  local current_dir=$(pwd)
   local full_params=$@
   local stackdomain=""
   local default_host="localhost"
@@ -97,7 +98,8 @@ function stackb {
           -l | --logs )
               shift
               local sb_container="$@"
-              docker-compose logs $sb_container
+              local log_str=docker-compose logs $sb_container
+              echo $log_str
               return
               ;;
           --mysqlrootpwd )
@@ -108,6 +110,36 @@ function stackb {
               shift
               sb_db_sec_1="$1"
               ;;
+          elk )
+              shift
+              local elk_cmd="$@"
+              local elk_file_name=".elk.stack.env"
+              if [ "$elk_cmd" == "up" ] || [ -z  "$elk_cmd"  ]; then
+                elk_cmd="up -d"
+              fi
+              cd docker-elk
+              docker-compose $elk_cmd 
+              if [ -f $elk_file_name ]; then
+                echo "elk firs time run"
+                stack-wait-log elasticsearch "Quit the server with CONTROL-C"
+                #docker-compose exec -T elasticsearch 'bin/elasticsearch-setup-passwords' auto --batch >> $elk_file_name
+                cat $elk_file_name
+              fi
+              cd $current_dir
+              return 
+              ;;
+          --tools )
+              cd stackb-dev
+              docker-compose up 
+              cd $current_dir
+              return 
+              ;;
+          --prod )
+              cd stackb-dev
+              docker-compose down 
+              cd $current_dir
+              return 
+              ;;          
           -d | --domain )
               shift
               stackdomain="$1"
@@ -220,7 +252,8 @@ function stackb {
   fi
 
 
-  
+  cd $current_dir
+
   if [ $first_run == 1 ]; then
     echo "stackdomain=$stackdomain" >> ./.stack.env
     echo "sb_db_sec_0=$sb_db_sec_0" >> ./.stack.env
@@ -237,26 +270,10 @@ function stackb {
     docker-compose up -d --build
     # Sleep to let MySQL load (there's probably a better way to do this)
     echo
-    echo
-
-
     echo "Connecting app to DB for first time. Please wait..."
-    local step_count=1    
-    while true
-    do
-      ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
-      echo "Step $step_count : Reading logs... "
-      echo "Reading logs"
-      local app_log=$(docker-compose logs app 2>&1 | grep "Quit the server with CONTROL-C")
-      if [ ${#app_log} -ne 0 ];then 
-        echo "App server Ready. Waiting for container (5 secs)..."
-        tickforseconds 5
-        break
-      else 
-        tickforseconds 20
-        step_count=$(( $step_count + 1 ))
-      fi
-    done
+
+    stack-wait-log app "Quit the server with CONTROL-C"
+
     echo "Creating Django Admin user"
     docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
     docker-compose exec app python3 manage.py changepassword $admin_user
@@ -272,6 +289,33 @@ function stackb {
   fi
   echo "Stackb completed."
 
+}
+
+function stack-wait-log {
+  local stack_service="$1"
+  local log_str="$2"
+  local step_count=1 
+  echo "service: [$stack_service] waiting for: [$log_str]"   
+  while true
+  do
+    ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
+    echo "Step $step_count : Reading logs... "
+    echo "Reading logs"
+    local app_log=$(docker-compose logs $stack_service 2>&1 | grep "$log_str")
+    if [ ${#app_log} -ne 0 ];then 
+      echo "App server Ready. Waiting for container (5 secs)..."
+      tickforseconds 10
+      break
+    else 
+      tickforseconds 20
+      step_count=$(( $step_count + 1 ))
+    fi
+  done
+}
+
+function stack-log {
+  local log_entry="$@"
+  echo $log_entry >> ./logs/stackb.log
 }
 function echoline {
   echo "-----------------------------------------------------------------------"

@@ -334,6 +334,7 @@ ASALocalRun/
 #stackbuilder ignores
 
 #saved env file
+*.stack.env
 .stack.env
 nginx-selfsigned.crt
 nginx-selfsigned.key
