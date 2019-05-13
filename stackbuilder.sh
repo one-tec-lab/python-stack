@@ -17,7 +17,7 @@
 ##################################################################
 
 export SB_VERSION="4.1.1"
-ELK_VERSION="7.0.1"
+
 validbash=0
 os=${OSTYPE//[0-9.-]*/}
 echo "Stackbuilder v $SB_VERSION $(date -r stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
@@ -268,7 +268,6 @@ function stackb {
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \
     CURRENT_UID=$(id -u):$(id -g) \
-    ELK_VERSION=$ELK_VERSION \
     docker-compose up -d --build
     # Sleep to let MySQL load (there's probably a better way to do this)
     echo
@@ -286,7 +285,6 @@ function stackb {
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \
     CURRENT_UID=$(id -u):$(id -g) \
-    ELK_VERSION=$ELK_VERSION \
     docker-compose $compose_cmd $spec_params $spec_container
 
   fi
