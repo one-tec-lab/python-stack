@@ -16,7 +16,7 @@
 # Licence : MIT
 ##################################################################
 
-export SB_VERSION="4.1.1"
+SB_VERSION="4.1.1"
 
 validbash=0
 os=${OSTYPE//[0-9.-]*/}
@@ -61,6 +61,35 @@ function update-stackbuilder {
    fi
    echo "Stack utilities updated to $SB_VERSION"
 }
+function sbansible {
+  local current_dir=$(pwd)
+  SHARED="${PWD}:/app/"
+  ARG0=$2
+  cd ansible
+  case $1 in
+     "bake")
+          docker build -t stackb/ansibledocker . --network=host
+          ;;
+      "run")
+          docker-compose run ansible
+          ;;
+       "lint")
+          if [[ "$ARG0" = *[!\ ]* ]];
+          then
+            docker-compose run ansible sh -c "/usr/bin/ansible-lint /app/$ARG0"
+            #docker run -v $SHARED --rm -ti stackb/ansibledocker /bin/sh -c "ansible-lint /app/$ARG0"
+          else
+            echo "Missing lint file! Valid sample: ./ansible-docker.sh lint main.yml"
+          fi
+          ;;
+      *)
+          echo "Ansible-Docker: by Diego Pacheco"
+          echo "bake : bake the docker image"
+          echo "run  : run whats inside src/main.yml with ansible-playbook"
+          echo "lint : run ansible-lint in a specific file. .ie: ./ansible-docker.sh lint main.yml"
+  esac
+  cd $current_dir
+}
 
 function stackb {
   local current_dir=$(pwd)
@@ -77,6 +106,7 @@ function stackb {
   local spec_container=""
   local spec_params=""
   local compose_cmd="up -d"
+  local portainer_port="29000"
   echo "Executing : stackb $full_params"
   if [ -f .stack.env ]; then
     echo "Using .stack.env"
@@ -263,6 +293,7 @@ function stackb {
     echo "admin_mail=$admin_mail" >> ./.stack.env
 
     echo "First Run Configuration..."
+    SB_VERSION=$SB_VERSION \
     STACK_MAIN_DOMAIN=$stackdomain \
     SB_MYSQL_ROOT_PASSWORD=$sb_db_sec_0 \
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
@@ -281,6 +312,7 @@ function stackb {
     
   else
     echo "EXECUTING Compose Params:[${spec_params:-default}] Container(s):[${spec_container:-all}]"
+    SB_VERSION=$SB_VERSION \
     STACK_MAIN_DOMAIN=$stackdomain \
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \

@@ -9,9 +9,9 @@ networks:
 volumes:
   data-db:
   data-portainer:
-  data-postgres:
-  data-pgadmin:  
-  #data-elastiksearch:
+  # data-postgres:
+  # data-pgadmin:  
+  # data-elastiksearch:
   mongo_data:
     driver: local
   es_data:
@@ -20,26 +20,6 @@ volumes:
     driver: local    
 
 services:
-  reverse-proxy:
-    #container_name: proxy
-    image: traefik # The official Traefik docker image
-    command: --api --docker # Enables the web UI and tells Traefik to listen to docker
-    restart: always
-    
-    networks:
-      - sb_public
-      - sb_internal
-    ports:
-      - "80:80"     # The HTTP port
-      - "443:443"
-      - "127.0.0.1:20001:8080" # The Web UI (enabled by --api)
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
-      - ./proxy/traefik.toml:/traefik.toml # Traefik configuration file
-      - ./proxy/acme:/acme # Tell Traefik to save SSL certs here
-    labels:
-      - "traefik.enable=false"
-
 
   nginx-proxy:
     build: ./nginx
@@ -59,7 +39,7 @@ services:
       - app
 
   app:
-    build: .
+    build: ./app
     restart: always
     environment:
       RDS_HOST: db
@@ -75,7 +55,7 @@ services:
       - "127.0.0.1:20080:20080"
     #No local folders for volumes in prod. 
     #volumes:
-    #  - ./app:/workspace
+    #  - ./app/workspace:/workspace
     #command: ./wait-for.sh db:3306 --timeout=90 -- bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:8000"
     command: bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:20080"
     #command: python3 -m http.server 81
@@ -97,7 +77,8 @@ services:
   db:
     #container_name: db
     #image: mysql:5.7.26
-    image: bitnami/mysql:5.7
+    image: percona/percona-server:5.7
+    #image: bitnami/mysql:5.7
     restart: always
     environment:
       MYSQL_DATABASE: stack_db
@@ -128,27 +109,8 @@ services:
     depends_on:
       - graylog
 
-  phpmyadmin:
-    depends_on:
-      - db
-    image: phpmyadmin/phpmyadmin
-    restart: always
-    ports:
-      - '127.0.0.1:28080:80'
-    environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: ${SB_MYSQL_ROOT_PASSWORD:-ch4ng3m3}
-    networks:
-      - sb_internal
-    labels:
-      - "traefik.enable=false"
 
-  mongodb:
-    networks:
-      - sb_internal
-    image: mongo:3
-    volumes:
-      - mongo_data:/data/db
+
   # Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
   elasticsearch:
     networks:
@@ -166,6 +128,7 @@ services:
         soft: -1
         hard: -1
     #mem_limit: 1g
+
   # Graylog: https://hub.docker.com/r/graylog/graylog/
   graylog:
     networks:
@@ -197,6 +160,32 @@ services:
       # GELF UDP
       - 12201:12201/udp
 
+  mongodb:
+    networks:
+      - sb_internal
+    image: mongo:3
+    volumes:
+      - mongo_data:/data/db
+
+  # reverse-proxy:
+  #   #container_name: proxy
+  #   image: traefik # The official Traefik docker image
+  #   command: --api --docker # Enables the web UI and tells Traefik to listen to docker
+  #   restart: always
+    
+  #   networks:
+  #     - sb_public
+  #     - sb_internal
+  #   ports:
+  #     - "80:80"     # The HTTP port
+  #     - "443:443"
+  #     - "127.0.0.1:20001:8080" # The Web UI (enabled by --api)
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+  #     - ./proxy/traefik.toml:/traefik.toml # Traefik configuration file
+  #     - ./proxy/acme:/acme # Tell Traefik to save SSL certs here
+  #   labels:
+  #     - "traefik.enable=false"
 
 
   # postgres:
@@ -231,3 +220,19 @@ services:
   #   restart: unless-stopped
   #   labels:
   #     - "traefik.enable=false"
+
+  # phpmyadmin:
+  #   depends_on:
+  #     - db
+  #   image: phpmyadmin/phpmyadmin
+  #   restart: always
+  #   ports:
+  #     - '127.0.0.1:28080:80'
+  #   environment:
+  #     PMA_HOST: db
+  #     MYSQL_ROOT_PASSWORD: ${SB_MYSQL_ROOT_PASSWORD:-ch4ng3m3}
+  #   networks:
+  #     - sb_internal
+  #   labels:
+  #     - "traefik.enable=false"
+

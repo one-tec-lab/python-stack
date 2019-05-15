@@ -1,0 +1,12 @@
+version: '3.5'
+
+services:
+  ansible:
+    #container_name: ansible
+    build: .
+
+    volumes:
+      - ${SB_ANSIBLE_CONTEXT:-./src}:/app
+
+    command: bash -c "ansible-playbook /app/main.yml"
+
