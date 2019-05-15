@@ -5,10 +5,10 @@ FROM python:3.7
 ENV PYTHONUNBUFFERED 1
 RUN mkdir /workspace
 WORKDIR /workspace
-COPY ./app/requirements.txt /workspace/
-COPY wait-for.sh /workspace/
-COPY ./app/ /workspace/
 RUN pip3 install --upgrade pip
+COPY ./app/ /workspace/
+COPY ./app/requirements.txt /workspace/
+#COPY wait-for.sh /workspace/
 RUN pip3 install -r requirements.txt
 #RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
