@@ -63,7 +63,7 @@ function update-stackbuilder {
 }
 function sbansible {
   local current_dir=$(pwd)
-  SHARED="${PWD}:/app/"
+  SHARED="./src/:/app/"
   ARG0=$2
   cd ansible
   case $1 in
@@ -71,7 +71,8 @@ function sbansible {
           docker build -t stackb/ansibledocker . --network=host
           ;;
       "run")
-          docker-compose run ansible
+          #docker run -v $SHARED --rm --name ansibledocker diegopacheco/ansibledocker
+          docker-compose run --rm ansible
           ;;
        "lint")
           if [[ "$ARG0" = *[!\ ]* ]];
