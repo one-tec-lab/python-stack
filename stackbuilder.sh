@@ -19,11 +19,15 @@
 # ssh-keygen -t rsa -b 4096
 ##################################################################
 
-SB_VERSION="4.1.1"
-
+SB_VERSION="4.1.5"
+SB_VERSION_DATE=""
 validbash=0
+full_os=${OSTYPE}
 os=${OSTYPE//[0-9.-]*/}
-echo "Stackbuilder v $SB_VERSION $(date -r stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
+if [ -f stackbuilder.sh ];then
+  SB_VERSION_DATE="$(date -r stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
+fi
+echo "Stackbuilder v $SB_VERSION $SB_VERSION_DATE"
 case "$os" in
   darwin)
     echo "I'm in a Mac"
@@ -36,7 +40,7 @@ case "$os" in
     ;;
 
   linux)
-    echo "I'm in Linux"
+    echo "I'm in Linux : $full_os"
      validbash=1
    ;;
   *)
@@ -46,15 +50,14 @@ case "$os" in
 esac
 
 
-function run_remote {
+function run_remote_script {
+
   local user=$1
   local host=$2
-  local interpreter=$3
-  local realscript=$4
+  local realscript=$3
+  shift 3
 
-  interpreter="${interpreter:-bash}"
-  shift 4
-
+  # escape the arguments
   declare -a args
 
   count=0
@@ -63,9 +66,22 @@ function run_remote {
     count=$((count+1))
   done
 
-  ssh $user@$host "cat | ${interpreter} /dev/stdin" "${args[@]}" < "$realscript"
+  local remote_user_path="/home/$user"
+  if [ "$user" == "root" ]; then
+     remote_user_path="/"
+  fi
+
+  local file_name=${realscript##*/}
+  local remote_script="$remote_user_path/$file_name"
+  echo "Authenticating to copy file: $file_name"
+  scp  "$realscript" "$user"@"$host":$remote_user_path
+  echo "Authenticating to execute"
+  ssh -t $user@$host bash "$remote_script" "${args[@]}" && echo "remote script finished : $remote_script"
 }
 
+function create-proyect-zip {
+
+}
 function update-stackbuilder {
    
    git fetch --all
