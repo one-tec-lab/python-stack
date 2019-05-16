@@ -14,6 +14,9 @@
 # 0.1 - Initial Script
 # Disclaimer : Script provided AS IS. Use it at your own risk.
 # Licence : MIT
+# remember:
+# generate ssh keys:
+# ssh-keygen -t rsa -b 4096
 ##################################################################
 
 SB_VERSION="4.1.1"
@@ -43,7 +46,23 @@ case "$os" in
 esac
 
 
+function run_remote {
+  local realscript=$1
+  local interpreter=$2
+  local user=$3
+  local host=$4
+  shift 4
 
+  declare -a args
+
+  count=0
+  for arg in "$@"; do
+    args[count]=$(printf '%q' "$arg")
+    count=$((count+1))
+  done
+
+  ssh $user@$host "cat | ${interpreter} /dev/stdin" "${args[@]}" < "$realscript"
+}
 
 function update-stackbuilder {
    
@@ -84,7 +103,7 @@ function sbansible {
           fi
           ;;
       *)
-          echo "Ansible-Docker: by Diego Pacheco"
+          echo "Ansible-Docker"
           echo "bake : bake the docker image"
           echo "run  : run whats inside src/main.yml with ansible-playbook"
           echo "lint : run ansible-lint in a specific file. .ie: ./ansible-docker.sh lint main.yml"
@@ -215,7 +234,10 @@ function stackb {
               stack-clean-all
               return
               ;;
-      esac
+          --version ) 
+              echo $SB_VERSION
+              return
+              ;;      esac
       shift
   done
 
@@ -536,3 +558,9 @@ function addreplacevalue {
      echo $nuevacad>>$archivo
    fi
 }
+
+if [ -z $1 ];then
+  echo "Sourced"
+else
+  $@
+fi

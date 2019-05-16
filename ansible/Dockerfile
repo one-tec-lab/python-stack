@@ -1,8 +1,5 @@
 FROM ubuntu:18.04
 
-MAINTAINER William Yeh <william.pjyeh@gmail.com>
-
-
 RUN echo "===> Adding Ansible's PPA..."  && \
     apt-get update  &&  apt-get install -y gnupg2    && \
     echo "deb http://ppa.launchpad.net/ansible/ansible/ubuntu bionic main" | tee /etc/apt/sources.list.d/ansible.list           && \

@@ -1,0 +1,5 @@
+[fail2ban-hosts]
+host-one ansible_host=your.vps.ip.address ansible_python_interpreter=/usr/bin/python3
+host-two ansible_host=your.vps.ip.address ansible_python_interpreter=/usr/bin/python3
+host-three ansible_host=your.vps.ip.address ansible_python_interpreter=/usr/bin/python3
+# Add more hosts here as needed.
