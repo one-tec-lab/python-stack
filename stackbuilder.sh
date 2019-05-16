@@ -47,10 +47,12 @@ esac
 
 
 function run_remote {
-  local realscript=$1
-  local interpreter=$2
-  local user=$3
-  local host=$4
+  local user=$1
+  local host=$2
+  local interpreter=$3
+  local realscript=$4
+
+  interpreter="${interpreter:-bash}"
   shift 4
 
   declare -a args
@@ -80,6 +82,7 @@ function update-stackbuilder {
    fi
    echo "Stack utilities updated to $SB_VERSION"
 }
+
 function sbansible {
   local current_dir=$(pwd)
   SHARED="./src/:/app/"
@@ -237,7 +240,8 @@ function stackb {
           --version ) 
               echo $SB_VERSION
               return
-              ;;      esac
+              ;;      
+      esac
       shift
   done
 
