@@ -7,16 +7,16 @@ networks:
 
 # Names our volume
 volumes:
-  data-db:
-  data-portainer:
+  data_db:
+
   # data-postgres:
   # data-pgadmin:  
-  # data-elastiksearch:
-  mongo_data:
+
+  data_mongo:
     driver: local
-  es_data:
+  data_elastics:
     driver: local
-  graylog_journal:
+  data_log:
     driver: local    
 
 services:
@@ -28,8 +28,8 @@ services:
       - sb_public
       - sb_internal
     ports:
-      - '127.0.0.1:8080:8080'
-      - '127.0.0.1:8443:8443'
+      - 127.0.0.1:8080:8080
+      - 127.0.0.1:8443:8443
     volumes:
       - ./nginx/static:/app
       - ./nginx/certs_stack:/opt/bitnami/certs_stack
@@ -60,19 +60,14 @@ services:
     command: bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:20080"
     #command: python3 -m http.server 81
     depends_on:
-      - db
-      - graylog            
+      - db        
     labels:
       - "traefik.enable=true"
       - "traefik.backend=app"
       - "traefik.docker.network=sb_public"
       - "traefik.frontend.rule=Host:${STACK_MAIN_DOMAIN:-localhost}"
       - "traefik.port=20080"   
-    # logging:
-    #   driver: gelf
-    #   options:
-    #     gelf-address: "udp://graylog:12201"
-    #     tag: "logger-test"
+
 
   db:
     #container_name: db
@@ -96,16 +91,12 @@ services:
       # Where our data will be persisted
     volumes:
       #regular mysql
-      #- data-db:/var/lib/mysql
+      #- data_db:/var/lib/mysql
       #bitnami mysql
-      - data-db:/bitnami/mysql/data
+      - data_db:/bitnami/mysql/data
     labels:
       - traefik.enable=false      
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://localhost:12201"
-        tag: "containers"
+
     depends_on:
       - graylog
 
@@ -117,7 +108,7 @@ services:
       - sb_internal
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.6.1
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - data_elastics:/usr/share/elasticsearch/data
     environment:
       - http.host=0.0.0.0
       - transport.host=localhost
@@ -135,12 +126,14 @@ services:
       - sb_internal
     image: graylog/graylog:3.0
     volumes:
-      - graylog_journal:/usr/share/graylog/data/journal
+      - data_log:/usr/share/graylog/data/journal
+      - ./graylog/config:/usr/share/graylog/data/config
     environment:
       # CHANGE ME (must be at least 16 characters)!
-      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      - GRAYLOG_ROOT_USERNAME=${SB_GRAYLOG_ROOT_USERNAME:-logadmin}
+      - GRAYLOG_PASSWORD_SECRET=${SB_GRAYLOG_PASSWORD_SECRET:-somepasswordpepper}
       # Password: admin
-      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      - GRAYLOG_ROOT_PASSWORD_SHA2=${SB_GRAYLOG_ROOT_PASSWORD_SHA2:-8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918}
       - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
     links:
       - mongodb:mongo
@@ -150,22 +143,22 @@ services:
       - elasticsearch
     ports:
       # Graylog web interface and REST API
-      - 9000:9000
+      - 127.0.0.1:9000:9000
       # Syslog TCP
-      - 1514:1514
+      - 127.0.0.1:1514:1514
       # Syslog UDP
-      - 1514:1514/udp
+      - 127.0.0.1:1514:1514/udp
       # GELF TCP
-      - 12201:12201
+      - 127.0.0.1:12201:12201
       # GELF UDP
-      - 12201:12201/udp
+      - 127.0.0.1:12201:12201/udp
 
   mongodb:
     networks:
       - sb_internal
     image: mongo:3
     volumes:
-      - mongo_data:/data/db
+      - data_mongo:/data/db
 
   # reverse-proxy:
   #   #container_name: proxy

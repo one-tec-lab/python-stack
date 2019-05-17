@@ -134,7 +134,9 @@ function sbansible {
   esac
   cd $current_dir
 }
-
+function sb {
+  stackb $@
+}
 function stackb {
   local current_dir=$(pwd)
   local full_params=$@
@@ -151,6 +153,7 @@ function stackb {
   local spec_params=""
   local compose_cmd="up -d"
   local portainer_port="29000"
+  local enable_central_log_str=""
   echo "Executing : stackb $full_params"
   if [ -f .stack.env ]; then
     echo "Using .stack.env"
@@ -173,7 +176,7 @@ function stackb {
           -l | --logs )
               shift
               local sb_container="$@"
-              local log_str=docker-compose logs $sb_container
+              local log_str=$(docker-compose logs $sb_container)
               echo $log_str
               return
               ;;
@@ -203,13 +206,13 @@ function stackb {
               cd $current_dir
               return 
               ;;
-          --tools )
+          devtoolsup  )
               cd devtools
               docker-compose up -d
               cd $current_dir
               return 
               ;;
-          --prod )
+          devtoolsup )
               cd devtools
               docker-compose down 
               cd $current_dir
@@ -347,7 +350,7 @@ function stackb {
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \
     CURRENT_UID=$(id -u):$(id -g) \
-    docker-compose up -d --build
+    docker-compose -f docker-compose.yml up -d --build
     # Sleep to let MySQL load (there's probably a better way to do this)
     echo
     echo "Connecting app to DB for first time. Please wait..."
@@ -355,21 +358,44 @@ function stackb {
     stack-wait-log app "Quit the server with CONTROL-C"
 
     echo "Creating Django Admin user"
-    docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail"
-    docker-compose exec app python3 manage.py changepassword $admin_user
+    set-django-admin $admin_user $admin_mail
+
+    docker-compose logs --no-color >& .stack.log
     
   else
+    source stack.conf
+    local enable_central_log=$(readvaluefromfile enable_central_log stack.conf)
+    local yml_includes=""
+    echo "Central log : $enable_central_log"
+    if [[ $compose_cmd == up* ]];then
+      echo "Adding yml files..."
+      yml_includes="-f docker-compose.yml"
+      if [[ "$enable_central_log" == "1" ]];then
+        echo "Central logging enabled"
+        yml_includes="$yml_includes -f docker-compose-central-log.yml"
+      fi    
+    fi
+
     echo "EXECUTING Compose Params:[${spec_params:-default}] Container(s):[${spec_container:-all}]"
+    local  cmd_str="docker-compose $yml_includes $compose_cmd $spec_params $spec_container"
+    echo $cmd_str
     SB_VERSION=$SB_VERSION \
     STACK_MAIN_DOMAIN=$stackdomain \
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \
     CURRENT_UID=$(id -u):$(id -g) \
-    docker-compose $compose_cmd $spec_params $spec_container
+    $cmd_str
 
   fi
   echo "Stackb completed."
 
+}
+
+function set-django-admin {
+    local admin_user=$1
+    local admin_mail=$2
+    local create_response=$(docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail")
+    docker-compose exec app python3 manage.py changepassword $admin_user
 }
 
 function stack-wait-log {
@@ -508,16 +534,37 @@ function stack-build {
 }
 function stack-clean-all {
   local confirm_action=""
-  echo "CAUTION: This action will delete all containes and data volumes"
+  local confirm_delete_data=""
+  local confirm_delete_images="" 
+  local options_str=""
+  echo "CAUTION: This action can delete all containers and data"
   echo
-  read  -p "Are you sure you want to delete all containters and data? (y/N) "  confirm_action  
+  read  -p "delete containers? (y/N) "  confirm_action  
   confirm_action="${confirm_action:-n}"
-
+  echo
+  read  -p "delete images? (y/N) "  confirm_delete_images  
+  confirm_delete_images="${confirm_delete_images:-n}"
+  echo
+  read  -p "delete data? (y/N) "  confirm_delete_data  
+  confirm_delete_data="${confirm_delete_data:-n}"
+  echo
   if [ "$confirm_action" == "y" ];then
-    docker-compose down
-    rm -rf .stack.env
-    docker system prune --all --force --volumes
+    options_str="$options_str --remove-orphans"
   fi
+
+  if [ "$confirm_delete_images" == "y" ];then
+    options_str="$options_str --rmi all"
+
+  fi
+
+  if [ "$confirm_delete_data" == "y" ];then
+    options_str="$options_str -v"
+    rm -f .stack.env
+    rm -f .stack.log
+  fi
+  echo "cleaning: docker-compose down $options_str"
+  docker-compose down $options_str
+
 }
 
 function readvaluefromfile {
