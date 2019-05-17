@@ -79,8 +79,13 @@ function run_remote_script {
   ssh -t $user@$host bash "$remote_script" "${args[@]}" && echo "remote script finished : $remote_script"
 }
 
-function create-proyect-zip {
-git archive --format=zip HEAD > latest.zip
+function zip-proyect {
+  local dest_file=$1
+  local current_dir=$(pwd)
+  local current_proyect=$(basename $current_dir)
+  dest_file="${dest_file:-$current_proyect}"
+  echo "creating $dest_file.zip $current_proyect"
+  git archive --format=zip HEAD > $dest_file.zip
 }
 function update-stackbuilder {
    
@@ -199,13 +204,13 @@ function stackb {
               return 
               ;;
           --tools )
-              cd stackb-dev
+              cd devtools
               docker-compose up -d
               cd $current_dir
               return 
               ;;
           --prod )
-              cd stackb-dev
+              cd devtools
               docker-compose down 
               cd $current_dir
               return 

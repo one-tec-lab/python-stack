@@ -49,13 +49,14 @@ function main {
     #local source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     local source_dir=$(get_source_dir)
     local source_file="${BASH_SOURCE[0]}"
+
     case $first_param in
       --selfdelete)
             shift
             cmd_line="$@"
-            $cmd_line
             echo "Deleted... [$source_file]"
             rm $source_file
+            $cmd_line
             ;;
         "run")
             shift
