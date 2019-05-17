@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   nginx-proxy:
-    build: .
+    build: ./nginx
     logging:
       driver: gelf
       options:
@@ -11,14 +11,14 @@ services:
         tag: "containers"
 
   app:
-    build: .
+    build: ./app
     logging:
       driver: gelf
       options:
         gelf-address: "udp://localhost:12201"
         tag: "containers"
   db:
-    build: .
+    image: percona/percona-server:5.7
     logging:
       driver: gelf
       options:

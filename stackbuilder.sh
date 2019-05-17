@@ -28,6 +28,8 @@ if [ -f stackbuilder.sh ];then
   SB_VERSION_DATE="$(date -r stackbuilder.sh '+%m-%d-%Y %H:%M:%S')"
 fi
 echo "Stackbuilder v $SB_VERSION $SB_VERSION_DATE"
+
+echo "PROJECT [ $(basename $(pwd)) ]"
 case "$os" in
   darwin)
     echo "I'm in a Mac"
@@ -173,11 +175,11 @@ function stackb {
               docker-compose exec $sb_container bash
               return
               ;;
-          -l | --logs )
+          logs )
               shift
               local sb_container="$@"
-              local log_str=$(docker-compose logs $sb_container)
-              echo $log_str
+              docker-compose logs --no-color -t $sb_container
+
               return
               ;;
           --mysqlrootpwd )
@@ -252,6 +254,7 @@ function stackb {
               ;;
           recreate )
               shift
+              compose_cmd="up -d"
               spec_container="$@"
               spec_params="--no-deps --build"
               docker-compose stop $spec_container
@@ -360,7 +363,7 @@ function stackb {
     echo "Creating Django Admin user"
     set-django-admin $admin_user $admin_mail
 
-    docker-compose logs --no-color >& .stack.log
+    docker-compose logs --no-color -t >& .stack.log
     
   else
     source stack.conf

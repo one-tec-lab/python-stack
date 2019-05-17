@@ -127,10 +127,10 @@ services:
     image: graylog/graylog:3.0
     volumes:
       - data_log:/usr/share/graylog/data/journal
-      - ./graylog/config:/usr/share/graylog/data/config
+      #- ./graylog/config:/usr/share/graylog/data/config
     environment:
       # CHANGE ME (must be at least 16 characters)!
-      - GRAYLOG_ROOT_USERNAME=${SB_GRAYLOG_ROOT_USERNAME:-logadmin}
+      - GRAYLOG_ROOT_USERNAME=${SB_GRAYLOG_ROOT_USERNAME:-admin}
       - GRAYLOG_PASSWORD_SECRET=${SB_GRAYLOG_PASSWORD_SECRET:-somepasswordpepper}
       # Password: admin
       - GRAYLOG_ROOT_PASSWORD_SHA2=${SB_GRAYLOG_ROOT_PASSWORD_SHA2:-8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918}
