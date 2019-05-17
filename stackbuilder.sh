@@ -80,7 +80,7 @@ function run_remote_script {
 }
 
 function create-proyect-zip {
-
+git archive --format=zip HEAD > latest.zip
 }
 function update-stackbuilder {
    
