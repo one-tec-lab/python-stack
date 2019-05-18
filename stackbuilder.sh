@@ -21,6 +21,7 @@
 
 SB_VERSION="4.1.5"
 SB_VERSION_DATE=""
+SB_PROJECT="$(basename $(pwd))"
 validbash=0
 full_os=${OSTYPE}
 os=${OSTYPE//[0-9.-]*/}
@@ -29,7 +30,7 @@ if [ -f stackbuilder.sh ];then
 fi
 echo "Stackbuilder v $SB_VERSION $SB_VERSION_DATE"
 
-echo "PROJECT [ $(basename $(pwd)) ]"
+echo "PROJECT [ $SB_PROJECT ]"
 case "$os" in
   darwin)
     echo "I'm in a Mac"
@@ -156,6 +157,7 @@ function stackb {
   local compose_cmd="up -d"
   local portainer_port="29000"
   local enable_central_log_str=""
+  SB_PROJECT="$(basename $(pwd))"
   echo "Executing : stackb $full_params"
   if [ -f .stack.env ]; then
     echo "Using .stack.env"
