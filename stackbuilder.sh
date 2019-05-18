@@ -376,6 +376,7 @@ function stackb {
       if [[ "$enable_central_log" == "1" ]];then
         echo "Central logging enabled"
         yml_includes="$yml_includes -f docker-compose-central-log.yml"
+        
       fi    
     fi
 

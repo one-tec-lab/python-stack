@@ -33,7 +33,7 @@ services:
     volumes:
       - ./proxy/static:/app
       - ./proxy/certs_stack:/opt/bitnami/certs_stack
-      #- ./proxy/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
+      - ./proxy/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
       - ./proxy/sb_block.conf:/opt/bitnami/nginx/conf/server_blocks/sb_block.conf:ro
     depends_on:
       - app

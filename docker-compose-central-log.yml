@@ -50,10 +50,11 @@ services:
   graylog:
     networks:
       - sb_internal
-    image: graylog/graylog:3.0
+    build: ./graylog
     volumes:
       - data_log:/usr/share/graylog/data/journal
       - ./graylog/config:/usr/share/graylog/data/config
+
     environment:
       # CHANGE ME (must be at least 16 characters)!
       - GRAYLOG_ROOT_USERNAME=${SB_GRAYLOG_ROOT_USERNAME:-admin}
