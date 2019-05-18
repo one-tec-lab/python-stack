@@ -235,7 +235,7 @@ function stackb {
               fi              
               ;;            
           down )
-              compose_cmd="down"
+              compose_cmd="down --remove-orphans"
               shift
               spec_container="$@"
               ;;
@@ -357,7 +357,7 @@ function stackb {
     # Sleep to let MySQL load (there's probably a better way to do this)
     echo
     echo "Connecting app to DB for first time. Please wait..."
-
+    stack-wait-log db "mysqld: ready for connections."
     stack-wait-log app "Quit the server with CONTROL-C"
 
     echo "Creating Django Admin user"
@@ -413,7 +413,7 @@ function stack-wait-log {
     echo "Reading logs"
     local app_log=$(docker-compose logs $stack_service 2>&1 | grep "$log_str")
     if [ ${#app_log} -ne 0 ];then 
-      echo "App server Ready. Waiting for container (5 secs)..."
+      echo "Service $stack_service Ready. Waiting for container (5 secs)..."
       tickforseconds 10
       break
     else 
@@ -539,7 +539,7 @@ function stack-clean-all {
   local confirm_action=""
   local confirm_delete_data=""
   local confirm_delete_images="" 
-  local options_str=""
+  local options_str="docker-compose down"
   echo "CAUTION: This action can delete all containers and data"
   echo
   read  -p "delete containers? (y/N) "  confirm_action  
@@ -552,22 +552,23 @@ function stack-clean-all {
   confirm_delete_data="${confirm_delete_data:-n}"
   echo
   if [ "$confirm_action" == "y" ];then
+    echo "Removing containers"
     options_str="$options_str --remove-orphans"
   fi
 
   if [ "$confirm_delete_images" == "y" ];then
+    echo "Removing images"
     options_str="$options_str --rmi all"
 
   fi
-
   if [ "$confirm_delete_data" == "y" ];then
-    options_str="$options_str -v"
+    echo "Removing volumes"
+    options_str="$options_str --volumes"
     rm -f .stack.env
     rm -f .stack.log
   fi
-  echo "cleaning: docker-compose down $options_str"
-  docker-compose down $options_str
-
+  echo "Executing : $options_str"
+  $options_str
 }
 
 function readvaluefromfile {

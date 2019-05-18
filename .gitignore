@@ -338,3 +338,4 @@ ASALocalRun/
 .stack.env
 nginx-selfsigned.crt
 nginx-selfsigned.key
+xdata/

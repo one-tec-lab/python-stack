@@ -21,8 +21,8 @@ volumes:
 
 services:
 
-  nginx-proxy:
-    build: ./nginx
+  proxy:
+    build: ./proxy
     restart: always    
     networks:
       - sb_public
@@ -31,10 +31,10 @@ services:
       - 127.0.0.1:8080:8080
       - 127.0.0.1:8443:8443
     volumes:
-      - ./nginx/static:/app
-      - ./nginx/certs_stack:/opt/bitnami/certs_stack
-      #- ./nginx/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
-      - ./nginx/sb_block.conf:/opt/bitnami/nginx/conf/server_blocks/sb_block.conf:ro
+      - ./proxy/static:/app
+      - ./proxy/certs_stack:/opt/bitnami/certs_stack
+      #- ./proxy/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
+      - ./proxy/sb_block.conf:/opt/bitnami/nginx/conf/server_blocks/sb_block.conf:ro
     depends_on:
       - app
 
@@ -56,7 +56,6 @@ services:
     #No local folders for volumes in prod. 
     #volumes:
     #  - ./app/workspace:/workspace
-    #command: ./wait-for.sh db:3306 --timeout=90 -- bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:8000"
     command: bash -c "python3 manage.py migrate --no-input && python3 manage.py runserver 0.0.0.0:20080"
     #command: python3 -m http.server 81
     depends_on:
@@ -97,68 +96,9 @@ services:
     labels:
       - traefik.enable=false      
 
-    depends_on:
-      - graylog
 
 
 
-  # Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
-  elasticsearch:
-    networks:
-      - sb_internal
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.6.1
-    volumes:
-      - data_elastics:/usr/share/elasticsearch/data
-    environment:
-      - http.host=0.0.0.0
-      - transport.host=localhost
-      - network.host=0.0.0.0
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    #mem_limit: 1g
-
-  # Graylog: https://hub.docker.com/r/graylog/graylog/
-  graylog:
-    networks:
-      - sb_internal
-    image: graylog/graylog:3.0
-    volumes:
-      - data_log:/usr/share/graylog/data/journal
-      #- ./graylog/config:/usr/share/graylog/data/config
-    environment:
-      # CHANGE ME (must be at least 16 characters)!
-      - GRAYLOG_ROOT_USERNAME=${SB_GRAYLOG_ROOT_USERNAME:-admin}
-      - GRAYLOG_PASSWORD_SECRET=${SB_GRAYLOG_PASSWORD_SECRET:-somepasswordpepper}
-      # Password: admin
-      - GRAYLOG_ROOT_PASSWORD_SHA2=${SB_GRAYLOG_ROOT_PASSWORD_SHA2:-8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918}
-      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
-    links:
-      - mongodb:mongo
-      - elasticsearch
-    depends_on:
-      - mongodb
-      - elasticsearch
-    ports:
-      # Graylog web interface and REST API
-      - 127.0.0.1:9000:9000
-      # Syslog TCP
-      - 127.0.0.1:1514:1514
-      # Syslog UDP
-      - 127.0.0.1:1514:1514/udp
-      # GELF TCP
-      - 127.0.0.1:12201:12201
-      # GELF UDP
-      - 127.0.0.1:12201:12201/udp
-
-  mongodb:
-    networks:
-      - sb_internal
-    image: mongo:3
-    volumes:
-      - data_mongo:/data/db
 
   # reverse-proxy:
   #   #container_name: proxy
