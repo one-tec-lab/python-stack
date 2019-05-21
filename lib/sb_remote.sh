@@ -69,4 +69,56 @@ function main {
   fi
 }
 
+function ubuntu-setup {
+  sudo apt-get update -y
+  sudo apt-get install -y fail2ban sendmail ufw
+  sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+  #sudo cat /etc/fail2ban/jail.local
+  sudo ufw disable
+  sudo ufw default deny incoming
+  sudo ufw allow ssh
+  sudo ufw allow http
+  sudo ufw allow https
+
+  sudo bash -c "cat > /etc/fail2ban/jail.local" <<-EOF
+[DEFAULT]
+
+# email address to receive notifications.
+destemail = root@localhost    
+# the email address from which to send emails.
+sender = root@<fq-hostname>    
+# name on the notification emails.
+sendername = Fail2Ban    
+# email transfer agent to use. 
+mta = sendmail   
+
+# see action.d/ufw.conf
+actionban = ufw.conf
+# see action.d/ufw.conf 
+actionunban = ufw.conf   
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+# the length of time between login attempts for maxretry. 
+findtime = 3600
+# attempts from a single ip before a ban is imposed.
+maxretry = 4
+# the number of seconds that a host is banned for.
+bantime = 86400
+EOF
+echo "enable fail2ban with systemctl"
+sudo systemctl service enable fail2ban
+sudo systemctl service start fail2ban
+echo "enable fail2ban with client"
+sudo fail2ban-client restart
+sudo fail2ban-client status
+sudo fail2ban-client status sshd
+echo "enabling ufw"
+sudo ufw enable
+sudo ufw status verbose
+}
+
+
 main $@

@@ -17,6 +17,9 @@
 # remember:
 # generate ssh keys:
 # ssh-keygen -t rsa -b 4096
+# copy keys:
+# ssh-copy-id username@remote_ip
+# will end in remote server ~/.ssh/authorized_keys
 ##################################################################
 
 SB_VERSION="4.1.5"
@@ -53,7 +56,7 @@ case "$os" in
 esac
 
 
-function run_remote_script {
+function run-remote-script {
 
   local user=$1
   local host=$2
