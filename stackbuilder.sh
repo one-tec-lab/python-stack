@@ -26,6 +26,7 @@ SB_VERSION="4.1.5"
 SB_VERSION_DATE=""
 SB_PROJECT="$(basename $(pwd))"
 SB_COMPOSE_CMD="sudo docker-compose"
+SB_DOCKER_CMD="sudo docker"
 validbash=0
 full_os=${OSTYPE}
 os=${OSTYPE//[0-9.-]*/}
@@ -44,6 +45,7 @@ case "$os" in
   msys)
     echo "I'm in Windows using git bash"
     SB_COMPOSE_CMD="docker-compose"
+    SB_DOCKER_CMD="docker"
     validbash=1
     ;;
 
@@ -119,17 +121,17 @@ function sbansible {
   cd ansible
   case $1 in
      "bake")
-          docker build -t stackb/ansibledocker . --network=host
+          $SB_DOCKER_CMD build -t stackb/ansibledocker . --network=host
           ;;
       "run")
-          #docker run -v $SHARED --rm --name ansibledocker diegopacheco/ansibledocker
+          #$SB_DOCKER_CMD run -v $SHARED --rm --name ansibledocker diegopacheco/ansibledocker
           $SB_COMPOSE_CMD run --rm ansible
           ;;
        "lint")
           if [[ "$ARG0" = *[!\ ]* ]];
           then
             $SB_COMPOSE_CMD run ansible sh -c "/usr/bin/ansible-lint /app/$ARG0"
-            #docker run -v $SHARED --rm -ti stackb/ansibledocker /bin/sh -c "ansible-lint /app/$ARG0"
+            #$SB_DOCKER_CMD run -v $SHARED --rm -ti stackb/ansibledocker /bin/sh -c "ansible-lint /app/$ARG0"
           else
             echo "Missing lint file! Valid sample: ./ansible-docker.sh lint main.yml"
           fi
