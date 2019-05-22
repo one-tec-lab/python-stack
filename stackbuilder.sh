@@ -25,6 +25,7 @@
 SB_VERSION="4.1.5"
 SB_VERSION_DATE=""
 SB_PROJECT="$(basename $(pwd))"
+SB_COMPOSE_CMD="sudo docker-compose"
 validbash=0
 full_os=${OSTYPE}
 os=${OSTYPE//[0-9.-]*/}
@@ -42,6 +43,7 @@ case "$os" in
 
   msys)
     echo "I'm in Windows using git bash"
+    SB_COMPOSE_CMD="docker-compose"
     validbash=1
     ;;
 
@@ -121,12 +123,12 @@ function sbansible {
           ;;
       "run")
           #docker run -v $SHARED --rm --name ansibledocker diegopacheco/ansibledocker
-          docker-compose run --rm ansible
+          $SB_COMPOSE_CMD run --rm ansible
           ;;
        "lint")
           if [[ "$ARG0" = *[!\ ]* ]];
           then
-            docker-compose run ansible sh -c "/usr/bin/ansible-lint /app/$ARG0"
+            $SB_COMPOSE_CMD run ansible sh -c "/usr/bin/ansible-lint /app/$ARG0"
             #docker run -v $SHARED --rm -ti stackb/ansibledocker /bin/sh -c "ansible-lint /app/$ARG0"
           else
             echo "Missing lint file! Valid sample: ./ansible-docker.sh lint main.yml"
@@ -177,13 +179,13 @@ function stackb {
               shift
               local sb_container="$1"
               echo "Connecting bash to container [$sb_container]. Type 'exit' to quit"
-              docker-compose exec $sb_container bash
+              $SB_COMPOSE_CMD exec $sb_container bash
               return
               ;;
           logs )
               shift
               local sb_container="$@"
-              docker-compose logs --no-color -t $sb_container
+              $SB_COMPOSE_CMD logs --no-color -t $sb_container
 
               return
               ;;
@@ -203,11 +205,11 @@ function stackb {
                 elk_cmd="up -d"
               fi
               cd docker-elk
-              docker-compose $elk_cmd 
+              $SB_COMPOSE_CMD $elk_cmd 
               if [ -f $elk_file_name ]; then
                 echo "elk firs time run"
                 stack-wait-log elasticsearch "Quit the server with CONTROL-C"
-                #docker-compose exec -T elasticsearch 'bin/elasticsearch-setup-passwords' auto --batch >> $elk_file_name
+                #$SB_COMPOSE_CMD exec -T elasticsearch 'bin/elasticsearch-setup-passwords' auto --batch >> $elk_file_name
                 cat $elk_file_name
               fi
               cd $current_dir
@@ -215,13 +217,13 @@ function stackb {
               ;;
           devtoolsup  )
               cd devtools
-              docker-compose up -d
+              $SB_COMPOSE_CMD up -d
               cd $current_dir
               return 
               ;;
           devtoolsup )
               cd devtools
-              docker-compose down 
+              $SB_COMPOSE_CMD down 
               cd $current_dir
               return 
               ;;          
@@ -262,8 +264,8 @@ function stackb {
               compose_cmd="up -d"
               spec_container="$@"
               spec_params="--no-deps --build"
-              docker-compose stop $spec_container
-              docker-compose rm -f $spec_container
+              $SB_COMPOSE_CMD stop $spec_container
+              $SB_COMPOSE_CMD rm -f $spec_container
               ;;
           --prune_all ) 
               stack-clean-all
@@ -358,7 +360,7 @@ function stackb {
     SB_MYSQL_PASSWORD=$sb_db_sec_1 \
     SB_RDS_PASSWORD=$sb_db_sec_1 \
     CURRENT_UID=$(id -u):$(id -g) \
-    docker-compose -f docker-compose.yml up -d --build
+    $SB_COMPOSE_CMD -f docker-compose.yml up -d --build
     # Sleep to let MySQL load (there's probably a better way to do this)
     echo
     echo "Connecting app to DB for first time. Please wait..."
@@ -368,7 +370,7 @@ function stackb {
     echo "Creating Django Admin user"
     set-django-admin $admin_user $admin_mail
 
-    docker-compose logs --no-color -t >& .stack.log
+    $SB_COMPOSE_CMD logs --no-color -t >& .stack.log
     
   else
     source stack.conf
@@ -386,7 +388,7 @@ function stackb {
     fi
 
     echo "EXECUTING Compose Params:[${spec_params:-default}] Container(s):[${spec_container:-all}]"
-    local  cmd_str="docker-compose $yml_includes $compose_cmd $spec_params $spec_container"
+    local  cmd_str="$SB_COMPOSE_CMD $yml_includes $compose_cmd $spec_params $spec_container"
     echo $cmd_str
     SB_VERSION=$SB_VERSION \
     STACK_MAIN_DOMAIN=$stackdomain \
@@ -403,8 +405,8 @@ function stackb {
 function set-django-admin {
     local admin_user=$1
     local admin_mail=$2
-    local create_response=$(docker-compose exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail")
-    docker-compose exec app python3 manage.py changepassword $admin_user
+    local create_response=$($SB_COMPOSE_CMD exec app python3 manage.py createsuperuser --username $admin_user  --noinput --email "$admin_mail")
+    $SB_COMPOSE_CMD exec app python3 manage.py changepassword $admin_user
 }
 
 function stack-wait-log {
@@ -417,7 +419,7 @@ function stack-wait-log {
     ##wait for app server logs to contain message = "Quit the server with CONTROL-C"
     echo "Step $step_count : Reading logs... "
     echo "Reading logs"
-    local app_log=$(docker-compose logs $stack_service 2>&1 | grep "$log_str")
+    local app_log=$($SB_COMPOSE_CMD logs $stack_service 2>&1 | grep "$log_str")
     if [ ${#app_log} -ne 0 ];then 
       echo "Service $stack_service Ready. Waiting for container (5 secs)..."
       tickforseconds 10
@@ -520,12 +522,12 @@ function stack-nginx-self-cert {
   fi
   echo "Creating self-signed certificate for $param_domain"
   echo "Subject: $subj_str" 
-  docker-compose exec -u 0 nginx-proxy bash -c "openssl req -x509 -nodes -days 1000 -newkey rsa:2048 -subj '$subj_str' -keyout /opt/bitnami/certs_stack/nginx-selfsigned.key -out /opt/bitnami/certs_stack/nginx-selfsigned.crt"
+  $SB_COMPOSE_CMD exec -u 0 nginx-proxy bash -c "openssl req -x509 -nodes -days 1000 -newkey rsa:2048 -subj '$subj_str' -keyout /opt/bitnami/certs_stack/nginx-selfsigned.key -out /opt/bitnami/certs_stack/nginx-selfsigned.crt"
   addreplacevalue "ssl_certificate /opt/bitnami/certs" "ssl_certificate /opt/bitnami/certs_stack/nginx-selfsigned.crt;" ./nginx/sb_block.conf
   addreplacevalue "ssl_certificate_key /opt/bitnami/certs" "ssl_certificate_key /opt/bitnami/certs_stack/nginx-selfsigned.key;" ./nginx/sb_block.conf
   addreplacevalue "#sb_replace_sb_domain" "server_name $param_domain www.$param_domain; #sb_replace_sb_domain" ./nginx/sb_block.conf
   #echo "Creating Diffie-Helman dhparam"
-  #docker-compose exec nginx-proxy exec -u 0 nginx-proxy bash -c "openssl dhparam -out /opt/bitnami/certs_stack/dhparam.pem 2048"
+  #$SB_COMPOSE_CMD exec nginx-proxy exec -u 0 nginx-proxy bash -c "openssl dhparam -out /opt/bitnami/certs_stack/dhparam.pem 2048"
   addreplacevalue "ssl_dhparam /opt/bitnami/certs" "#ssl_dhparam /opt/bitnami/certs_stack/dhparam.pem;" ./nginx/sb_block.conf
 
 }
@@ -537,15 +539,15 @@ function stack-nginx-default-conf {
 }
 
 function stack-build {
-    #docker-compose run app django-admin startproject project .
-    #docker-compose down --remove-orphans
-    docker-compose build
+    #$SB_COMPOSE_CMD run app django-admin startproject project .
+    #$SB_COMPOSE_CMD down --remove-orphans
+    $SB_COMPOSE_CMD build
 }
 function stack-clean-all {
   local confirm_action=""
   local confirm_delete_data=""
   local confirm_delete_images="" 
-  local options_str="docker-compose down"
+  local options_str="$SB_COMPOSE_CMD down"
   echo "CAUTION: This action can delete all containers and data"
   echo
   read  -p "delete containers? (y/N) "  confirm_action  
