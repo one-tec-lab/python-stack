@@ -2,13 +2,20 @@ version: '3.5'
 
 services:
 
-  proxy:
-    build: ./proxy
-    logging:
-      driver: gelf
-      options:
-        gelf-address: "udp://127.0.0.1:12201"
-        tag: "containers"
+  # proxy:
+  #   build: ./proxy
+  #   logging:
+  #     driver: gelf
+  #     options:
+  #       gelf-address: "udp://127.0.0.1:12201"
+  #       tag: "containers"
+  # proxy-manager:
+  #   image : jc21/nginx-proxy-manager:latest
+  #   logging:
+  #     driver: gelf
+  #     options:
+  #       gelf-address: "udp://127.0.0.1:12201"
+  #       tag: "containers"
 
   app:
     build: ./app

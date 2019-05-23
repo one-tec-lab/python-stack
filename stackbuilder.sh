@@ -61,7 +61,7 @@ esac
 
 
 function run-remote-script {
-
+# run-remote-script stackbuilder ip_address ./lib/sb_remote.sh bash
   local user=$1
   local host=$2
   local realscript=$3
@@ -223,7 +223,7 @@ function stackb {
               cd $current_dir
               return 
               ;;
-          devtoolsup )
+          devtoolsdown )
               cd devtools
               $SB_COMPOSE_CMD down 
               cd $current_dir
@@ -576,6 +576,8 @@ function stack-clean-all {
     options_str="$options_str --volumes"
     rm -f .stack.env
     rm -f .stack.log
+    rm -rf ./proxy-manager/data
+    rm -rf ./proxy-manager/letsencrypt
   fi
   echo "Executing : $options_str"
   $options_str

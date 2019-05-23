@@ -8,35 +8,49 @@ networks:
 # Names our volume
 volumes:
   data_db:
-
-  # data-postgres:
-  # data-pgadmin:  
-
+  data_proxy_db:
   data_mongo:
     driver: local
   data_elastics:
     driver: local
   data_log:
     driver: local    
+  # data-postgres:
+  # data-pgadmin:  
 
 services:
-
-  proxy:
-    build: ./proxy
-    restart: always    
+  proxy_manager:
+    image : jc21/nginx-proxy-manager:latest
+    restart: always
+    ports:
+      - 80:80
+      - 127.0.0.1:81:81
+      - 443:443
     networks:
       - sb_public
       - sb_internal
-    ports:
-      - 127.0.0.1:80:8080
-      - 127.0.0.1:443:8443
     volumes:
-      - ./proxy/static:/app
-      - ./proxy/certs_stack:/opt/bitnami/certs_stack
-      - ./proxy/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
-      - ./proxy/sb_block.conf:/opt/bitnami/nginx/conf/server_blocks/sb_block.conf:ro
+      - ./proxy-manager/config.json:/app/config/production.json
+      - ./proxy-manager/data:/data
+      - ./proxy-manager/letsencrypt:/etc/letsencrypt
     depends_on:
-      - app
+      - proxy_db
+    #environment:
+    # if you want pretty colors in your docker logs:
+    #- FORCE_COLOR=1
+  proxy_db:
+    image: mariadb:latest
+    restart: always
+    networks:
+      - sb_internal
+    environment:
+      MYSQL_ROOT_PASSWORD: "npm"
+      MYSQL_DATABASE: "npm"
+      MYSQL_USER: "npm"
+      MYSQL_PASSWORD: "npm"
+    volumes:
+      #- ./data/mysql:/var/lib/mysql
+      - data_proxy_db:/var/lib/mysql
 
   app:
     build: ./app
@@ -67,12 +81,11 @@ services:
       - "traefik.frontend.rule=Host:${STACK_MAIN_DOMAIN:-localhost}"
       - "traefik.port=20080"   
 
-
   db:
     #container_name: db
     #image: mysql:5.7.26
-    image: percona/percona-server:5.7
-    #image: bitnami/mysql:5.7
+    #image: percona/percona-server:5.7
+    image: bitnami/mysql:5.7
     restart: always
     environment:
       MYSQL_DATABASE: stack_db
@@ -97,7 +110,22 @@ services:
       - traefik.enable=false      
 
 
-
+  # proxy:
+  #   build: ./proxy
+  #   restart: always    
+  #   networks:
+  #     - sb_public
+  #     - sb_internal
+  #   ports:
+  #     - 127.0.0.1:8080:8080
+  #     - 127.0.0.1:8443:8443
+  #   volumes:
+  #     - ./proxy/static:/app
+  #     - ./proxy/certs_stack:/opt/bitnami/certs_stack
+  #     - ./proxy/nginx.conf:/opt/bitnami/nginx/conf/nginx.conf:ro
+  #     - ./proxy/sb_block.conf:/opt/bitnami/nginx/conf/server_blocks/sb_block.conf:ro
+  #   depends_on:
+  #     - app
 
 
   # reverse-proxy:

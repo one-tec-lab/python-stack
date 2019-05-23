@@ -339,3 +339,6 @@ ASALocalRun/
 nginx-selfsigned.crt
 nginx-selfsigned.key
 xdata/
+*.log
+*.zip
+*.pem

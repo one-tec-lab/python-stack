@@ -1,10 +1,14 @@
 {
-    "database": {
-      "engine": "mysql",
-      "host": "db",
-      "name": "npm",
-      "user": "npm",
-      "password": "npm",
-      "port": 3306
-    }
+  "database": {
+    "engine": "mysql",
+    "host": "proxy_db",
+    "name": "npm",
+    "user": "npm",
+    "password": "npm",
+    "port": 3306
+  },
+  "jwt": {
+    "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAklDLzA43J3AJY215uttfaJ1bgRGrZHtEsPPWPN2Xt/pQnU3A\nUWPwN0ExFTcmPDFR/sWzHN4zyVEeI4zZHmgKy55Rn5kbygJ5CZY4UeDkw+zGKHI2\nvR9dwxDmUMBSLuy0oYhl0izDhk4mv04j1SEoct37bagwUpGm1ajtExg74tdyxQ+L\nrBtpL33jtkyrCvjeHamSCO5YOHMBhzCIqVf6clItP3ADMq9Z6EmVzzOBBgMotgFY\n02re+h5Ytzx3pMaTzoNCQXaWSC3OZo9SEa3yg35D9mQKUA/1trYQU8vvNuOBQ1s7\njI6oBF45hK//eiX50Oax1flwXa14jQ+/RmrUuwIDAQABAoIBAFcDEY9yTL55VDv6\n2M+UsjKGkeo51dFVtU3+VEOyDA3vII3LtTkx06Moc8YIHAbj1b1LWO8r/WQVh3Tg\nyCXa/cCFkEj3Rp1lxxE6cpfOxHz3jAh1k7P4uUvN+wm+taEOR4VglhzdXhG63DQc\nhhazN1jIRkO6J7KSx8J8STB30vVc/8eOuuCRChYc7oCbzJQbm0hDYZgOeG52ewKs\nW9ZQJo8cTY9WkBe2cE0wpmM7JsSGfSa6qsz63z6Y6y1Nzo94EPvKgdHvZjnmL+Gz\npVomRdVzaFIp2HK5kHIUT0aWLUxXHOUgFRkpCl1/z3/wo/yZRMAkuMntQsp8mh84\nV32H4BECgYEA1FMUh4Apq5JLwfZR8IGpOXg0qp3tD9ErtEKdVgieB5S7Yp4EijiQ\nMRcHAB/TU5flPcQtFmNi/W5svZyIMWddci18gNPs6qJ5uxecVqCe4OM4woBWjMZK\n9DU5DvT56HxvSpt/ZAaf41/7JLo2KdwlNaExIz9eLoXafEgpYvP+LAUCgYEAsGm2\nyw6H+9zPu2Bn8QrQZwxGephXGnhxSoBkSEXsexnKQftyVXPv8fJfQ/X2sAo6cLJ7\n4IsU+iQ9Nr/lIbKWmG1w3Ym/enrwnKtReC2ujTvKt0yav4V5Q3tjRjcfxYa0azpv\nQBJ1NwWqQ4wI9k6U8UNdlfQxoZz5fGHI9Jflmb8CgYB2stOBRPcGwcy0bJ42VGZk\niHz4/TzwYMGMDsmitUKTfmSbpzdmhmSl7Peu7BvaWcqAk1GZeIp4n+kOv5mr9Nta\n328BHnkOWzKuk26FR1pK4vxyUAkSvjBdAfwaDn4/qIEXNoMrSkDMfnYKfEeXc0ki\nCDFOQTjHzXDtlfH9LeZkeQKBgFaA/+lCDtwpwpMXCuDfdKGTG1wyJ0QLm0H1AzeN\nUhBq7Qq9yaqtVxNEzgH9MiHQYiew3Z2VlYuzCXE3V5vWfpHv2FBJo2Ljteic+S38\n+IK4twZ6wcb4JCY68ssTbLjm/ME3viWk52U7menVWO+uSMqlRdaqD0w4NP4Q1QFb\nGnLxAoGBAND7PZ7OIDnOwTQgEW1KFnCbHqHb6/OgPcdMoCfAhTS5d7b88zqsJ7g7\npMs1MZP5oCUCE32puR/Sscyw/JuTuh9ybw6vLt8yFRqbTF11b/cf3naVFDpXKXSc\natC/APZCkxBRpZrfs1bklkhfCzk71hd6bgDisqG2JLjGPZVnEQVA\n-----END RSA PRIVATE KEY-----",
+    "pub": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAklDLzA43J3AJY215uttf\naJ1bgRGrZHtEsPPWPN2Xt/pQnU3AUWPwN0ExFTcmPDFR/sWzHN4zyVEeI4zZHmgK\ny55Rn5kbygJ5CZY4UeDkw+zGKHI2vR9dwxDmUMBSLuy0oYhl0izDhk4mv04j1SEo\nct37bagwUpGm1ajtExg74tdyxQ+LrBtpL33jtkyrCvjeHamSCO5YOHMBhzCIqVf6\nclItP3ADMq9Z6EmVzzOBBgMotgFY02re+h5Ytzx3pMaTzoNCQXaWSC3OZo9SEa3y\ng35D9mQKUA/1trYQU8vvNuOBQ1s7jI6oBF45hK//eiX50Oax1flwXa14jQ+/RmrU\nuwIDAQAB\n-----END PUBLIC KEY-----"
   }
+}
