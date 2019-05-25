@@ -73,9 +73,10 @@ function sb-rancher {
 }
 
 
-function install-remote-host {
+function remote-host {
     local host_config_id=$1
     shift
+    local cmd_str=$@
     if [[ -z  $host_config_id  ]];then
       create-host-config
     else
@@ -86,22 +87,35 @@ function install-remote-host {
         cat stack_hosts.conf
         echo "-----------------------------------------"
       else
-        echo "Stackbuilder is configuring with $config_str "
-
-        if [ ! -f ~/.ssh/id_rsa.pub ];then
-          echo "Must generate ssh keys localy"
-          ssh-keygen -t rsa -b 4096
-        fi
-        if [ -f ~/.ssh/id_rsa.pub ];then
-          echo "Copying keys to remote server"
-          ssh-copy-id $config_str
-          run-on-host $host_config_id ./lib/sb_remote.sh setup-ubuntu
-        else
-          echo "No public key found (must have ssh and ssh-keygen installed"
-        fi        
+        echo "Stackbuilder will execute at $config_str "
+        case $cmd_str in
+          setup-ubuntu)
+            echo $cmd_str
+            if [ ! -f ~/.ssh/id_rsa.pub ];then
+              echo "Must generate ssh keys localy"
+              ssh-keygen -t rsa -b 4096
+            fi
+            if [ -f ~/.ssh/id_rsa.pub ];then
+              echo "Copying keys to remote server"
+              ssh-copy-id $config_str
+              run-on-host $host_config_id ./lib/sb_remote.sh setup-ubuntu
+            else
+              echo "No public key found (must have ssh and ssh-keygen installed"
+            fi      
+            ;;
+          *)
+            echo $cmd_str
+            run-on-host $host_config_id $cmd_str
+            ;;
+          "")
+            echo "command empty"
+            ;;
+        esac
+  
       fi
     fi 
 }
+
 
 function create-host-config {
   local config_title=$1
