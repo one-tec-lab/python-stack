@@ -73,7 +73,7 @@ function sb-rancher {
 }
 
 
-function remote-host {
+function sb-host {
     local host_config_id=$1
     shift
     local cmd_str=$@
@@ -87,10 +87,10 @@ function remote-host {
         cat stack_hosts.conf
         echo "-----------------------------------------"
       else
-        echo "Stackbuilder will execute at $config_str "
+        echo "Executing at $host_config_id : $config_str "
+        echo "Command : [ $cmd_str ]"
         case $cmd_str in
-          setup-ubuntu)
-            echo $cmd_str
+          setup-ubuntu)          
             if [ ! -f ~/.ssh/id_rsa.pub ];then
               echo "Must generate ssh keys localy"
               ssh-keygen -t rsa -b 4096
@@ -98,15 +98,16 @@ function remote-host {
             if [ -f ~/.ssh/id_rsa.pub ];then
               echo "Copying keys to remote server"
               ssh-copy-id $config_str
-              run-on-host $host_config_id ./lib/sb_remote.sh setup-ubuntu
+              run-on-host $host_config_id ./lib/sb_host.sh setup-ubuntu
             else
               echo "No public key found (must have ssh and ssh-keygen installed"
             fi      
             ;;
+
           *)
-            echo $cmd_str
             run-on-host $host_config_id $cmd_str
             ;;
+
           "")
             echo "command empty"
             ;;
@@ -116,6 +117,55 @@ function remote-host {
     fi 
 }
 
+function run-on-host {
+  local host_config_id=$1
+  shift
+  local param_str=$@
+  local config_str=$(readvaluefromfile $host_config_id stack_hosts.conf)
+  local user_str=$(echo $config_str | cut -d'@' -f 1)
+  local host_str=$(echo $config_str | cut -d'@' -f 2)
+  run-remote-script $user_str $host_str $param_str
+}
+
+function run-remote-script {
+# run-remote-script stackbuilder ip_address ./lib/sb_host.sh bash
+  local full_params="$@"
+  local user="$1"
+  local host="$2"
+  local realscript="$3"
+  shift 3
+
+  # escape the arguments
+  declare -a args
+
+  count=0
+  for arg in "$@"; do
+    args[count]=$(printf '%q' "$arg")
+    count=$((count+1))
+  done
+
+  local remote_user_path="/home/$user"
+  if [ "$user" == "root" ]; then
+     remote_user_path="/"
+  fi
+
+  local file_name=${realscript##*/}
+  local remote_script=""
+  if [ -f $realscript ];then
+    echo "Authenticating to copy file: $file_name"
+    scp  "$realscript" "$user"@"$host":$remote_user_path
+    remote_script="$remote_user_path/$file_name"
+    echo "Authenticating to execute script"
+    ssh -t $user@$host bash "$remote_script" "${args[@]}" 
+  else
+    echo "Authenticating to execute command"
+    echo "-----------------Host says------------------"
+    ssh -t $user@$host "pwd && $realscript ${args[@]}"
+    echo "--------------------------------------------"
+
+  fi
+  echo "$user@$host finished : $remote_script $realscript ${args[@]}"
+}
 
 function create-host-config {
   local config_title=$1
@@ -158,48 +208,6 @@ function create-host-config {
     addreplacevalue "$config_title =" "$config_title = $user_str@$host_str" stack_hosts.conf
   fi
   echo $config_title
-}
-
-function run-on-host {
-  local host_config_id=$1
-  shift
-  local param_str=$@
-  local config_str=$(readvaluefromfile $host_config_id stack_hosts.conf)
-  local user_str=$(echo $config_str | cut -d'@' -f 1)
-  local host_str=$(echo $config_str | cut -d'@' -f 2)
-  run-remote-script $user_str $host_str $param_str
-}
-function run-remote-script {
-# run-remote-script stackbuilder ip_address ./lib/sb_remote.sh bash
-  local user=$1
-  local host=$2
-  local realscript=$3
-  shift 3
-
-  # escape the arguments
-  declare -a args
-
-  count=0
-  for arg in "$@"; do
-    args[count]=$(printf '%q' "$arg")
-    count=$((count+1))
-  done
-
-  local remote_user_path="/home/$user"
-  if [ "$user" == "root" ]; then
-     remote_user_path="/"
-  fi
-
-  local file_name=${realscript##*/}
-  local remote_script=""
-  if [ -f $realscript ];then
-    echo "Authenticating to copy file: $file_name"
-    scp  "$realscript" "$user"@"$host":$remote_user_path
-    remote_script="$remote_user_path/$file_name"
-  fi
-  echo "Authenticating to execute"
-  ssh -t $user@$host bash "$remote_script" "${args[@]}" 
-  echo "remote execution finished : $remote_script ${args[@]}"
 }
 
 function zip-proyect {
