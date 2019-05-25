@@ -1,7 +1,17 @@
 #!/bin/bash
 #
+# remember:
+# generate ssh keys:
+# ssh-keygen -t rsa -b 4096
+# copy keys:
+# ssh-copy-id username@remote_ip
+# will end in remote server ~/.ssh/authorized_keys
+# public key to copy from local host:
+# ~/.ssh/id_rsa.pub
+# example using ssh:
+# cat ~/.ssh/id_rsa.pub | ssh demo@198.51.100.0 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >>  ~/.ssh/authorized_keys"
 
-function get_source_dir {
+function get-source-dir {
   local SOURCE="${BASH_SOURCE[0]}"
   local DIR=""
   while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -54,7 +64,7 @@ function info {
   echo    "User     : $(whoami)"
   echo -n "hostname : "
   cat /etc/hostname
-  echo    "folder   : $(get_source_dir)"
+  echo    "folder   : $(get-source-dir)"
   
 }
 
@@ -91,9 +101,12 @@ function main {
   fi
 }
 
-function ubuntu-setup {
-  sudo apt-get update -y
-  sudo apt-get install -y fail2ban sendmail ufw
+function setup-ubuntu {
+  create-stackuilder-user
+  install-docker
+
+  #sudo apt-get update -y
+  sudo apt-get install -y fail2ban sendmail ufw git
   sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
   #sudo cat /etc/fail2ban/jail.local
   sudo ufw disable
@@ -130,6 +143,7 @@ maxretry = 4
 # the number of seconds that a host is banned for.
 bantime = 86400
 EOF
+
 echo "enable fail2ban with systemctl"
 sudo systemctl service enable fail2ban
 sudo systemctl service start fail2ban
@@ -140,6 +154,10 @@ sudo fail2ban-client status sshd
 echo "enabling ufw"
 sudo ufw enable
 sudo ufw status verbose
+#check log:
+# cat /var/log/auth.log
+
+echo "setup-ubuntu Finished"
 }
 
 

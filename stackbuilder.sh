@@ -14,12 +14,7 @@
 # 0.1 - Initial Script
 # Disclaimer : Script provided AS IS. Use it at your own risk.
 # Licence : MIT
-# remember:
-# generate ssh keys:
-# ssh-keygen -t rsa -b 4096
-# copy keys:
-# ssh-copy-id username@remote_ip
-# will end in remote server ~/.ssh/authorized_keys
+
 ##################################################################
 
 SB_VERSION="4.1.5"
@@ -35,7 +30,7 @@ if [ -f stackbuilder.sh ];then
 fi
 echo "Stackbuilder v $SB_VERSION $SB_VERSION_DATE"
 
-echo "PROJECT [ $SB_PROJECT ]"
+echo "PROJECT [ $SB_PROJECT ] $(get_source_dir)"
 case "$os" in
   darwin)
     echo "I'm in a Mac"
@@ -59,7 +54,106 @@ case "$os" in
   exit 1
 esac
 
+function get-source-dir {
+  local SOURCE="${BASH_SOURCE[0]}"
+  local DIR=""
+  while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  done
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  echo "$DIR"
+}
 
+function sb-rancher {
+  local cmd_str="$SB_DOCKER_CMD run -d --name=sb_rancher --restart=unless-stopped -p 80:80 -p 443:443 rancher/rancher "
+  echo $cmd_str
+  $cmd_str
+}
+
+
+function install-remote-host {
+    local host_config_id=$1
+    shift
+    if [[ -z  $host_config_id  ]];then
+      create-host-config
+    else
+      local config_str=$(readvaluefromfile $host_config_id stack_hosts.conf)
+      if [[ -z  $config_str  ]];then
+        echo "Must specify a valid host configuration:"
+        echo "-----------------------------------------"
+        cat stack_hosts.conf
+        echo "-----------------------------------------"
+      else
+        echo "Stackbuilder is configuring with $config_str "
+
+        if [ ! -f ~/.ssh/id_rsa.pub ];then
+          echo "Must generate ssh keys localy"
+          ssh-keygen -t rsa -b 4096
+        fi
+        if [ -f ~/.ssh/id_rsa.pub ];then
+          echo "Copying keys to remote server"
+          ssh-copy-id $config_str
+          run-on-host $host_config_id ./lib/sb_remote.sh setup-ubuntu
+        else
+          echo "No public key found (must have ssh and ssh-keygen installed"
+        fi        
+      fi
+    fi 
+}
+
+function create-host-config {
+  local config_title=$1
+  local host_str=$2
+  local user_str=$3  
+  if [[ -z  $config_title  ]];then
+    while true
+    do
+        read  -p "Provide a name for host configuration (ctrl+c to cancel) : "  config_title  
+        echo
+        [ -z "$config_title" ] && echo "Please provide a name for host configuration : " || break
+        echo
+    done
+  fi
+  if [[ -z  $host_str  ]];then
+    while true
+    do
+        read  -p "Provide a host name or IP for connection (ctrl+c to cancel) : "  host_str  
+
+        echo
+        [ -z "$host_str" ] && echo "Please provide a host name or IP for connection : " || break
+        echo
+    done
+  fi
+  if [[ -z  $user_str  ]];then
+    while true
+    do
+        read  -p "Provide a user name for connection (ctrl+c to cancel) : "  user_str  
+
+        echo
+        [ -z "$user_str" ] && echo "Please provide a user name for connection : " || break
+        echo
+    done
+  fi
+  if [[ -z  $config_title  ]] || [[ -z  $host_str  ]] || [[ -z  $user_str  ]];then
+    echo "Must provide a config title, host/IP and user name to configure ssh connection. CANCELED"
+    return
+  else
+
+    addreplacevalue "$config_title =" "$config_title = $user_str@$host_str" stack_hosts.conf
+  fi
+  echo $config_title
+}
+function run-on-host {
+  local host_config_id=$1
+  shift
+  local param_str=$@
+  local config_str=$(readvaluefromfile $host_config_id stack_hosts.conf)
+  local user_str=$(echo $config_str | cut -d'@' -f 1)
+  local host_str=$(echo $config_str | cut -d'@' -f 2)
+  run-remote-script $user_str $host_str $param_str
+}
 function run-remote-script {
 # run-remote-script stackbuilder ip_address ./lib/sb_remote.sh bash
   local user=$1
@@ -82,11 +176,15 @@ function run-remote-script {
   fi
 
   local file_name=${realscript##*/}
-  local remote_script="$remote_user_path/$file_name"
-  echo "Authenticating to copy file: $file_name"
-  scp  "$realscript" "$user"@"$host":$remote_user_path
+  local remote_script=""
+  if [ -f $realscript ];then
+    echo "Authenticating to copy file: $file_name"
+    scp  "$realscript" "$user"@"$host":$remote_user_path
+    remote_script="$remote_user_path/$file_name"
+  fi
   echo "Authenticating to execute"
-  ssh -t $user@$host bash "$remote_script" "${args[@]}" && echo "remote script finished : $remote_script"
+  ssh -t $user@$host bash "$remote_script" "${args[@]}" 
+  echo "remote execution finished : $remote_script ${args[@]}"
 }
 
 function zip-proyect {
@@ -106,7 +204,7 @@ function update-stackbuilder {
       echo "updating stackbuilder script for bash"
       cat ./stackbuilder.sh > ~/stackbuilder.sh
       #add source line if not in .bashrc
-      grep -qxF 'source stackbuilder.sh' ~/.bashrc || echo 'source stackbuilder.sh' >> ~/.bashrc
+      grep -qxF 'source ~/stackbuilder.sh' ~/.bashrc || echo 'source ~/stackbuilder.sh' >> ~/.bashrc
       source ./stackbuilder.sh 
    else
     echo "You need to be inside a valid stackbuilder project and bash terminal"
@@ -114,6 +212,9 @@ function update-stackbuilder {
    echo "Stack utilities updated to $SB_VERSION"
 }
 
+function sb-bash {
+  cat ./stackbuilder.sh > ~/stackbuilder.sh
+}
 function sbansible {
   local current_dir=$(pwd)
   SHARED="./src/:/app/"
@@ -144,6 +245,7 @@ function sbansible {
   esac
   cd $current_dir
 }
+
 function sb {
   stackb $@
 }
@@ -648,6 +750,7 @@ function addreplacevalue {
 }
 
 if [ -z $1 ];then
+
   echo "Sourced"
 else
   $@
