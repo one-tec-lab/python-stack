@@ -77,18 +77,22 @@ function sb-host {
     local host_config_id=$1
     shift
     local cmd_str=$@
-    if [[ -z  $host_config_id  ]];then
-      create-host-config
-    else
-      local config_str=$(readvaluefromfile $host_config_id stack_hosts.conf)
-      if [[ -z  $config_str  ]];then
-        echo "Must specify a valid host configuration:"
+    if [[ -z  $host_config_id  ]] || [[ ! -f ./.stack_hosts/$host_config_id.conf ]];then
+      create-host-config $host_config_id
+    fi
+    if [[ -f ./.stack_hosts/$host_config_id.conf ]];then
+      local user_str=$(readvaluefromfile "USER" ./.stack_hosts/$host_config_id.conf)
+      local host_str=$(readvaluefromfile "HOST" ./.stack_hosts/$host_config_id.conf)
+      if [[ -z $user_str  ]] || [[ -z host_str ]];then
+        echo "Must specify a valid  configuration:"
         echo "-----------------------------------------"
-        cat stack_hosts.conf
+        ls ./.stack_hosts
         echo "-----------------------------------------"
       else
+        local config_str="$user_str@$host_str"
         echo "Executing at $host_config_id : $config_str "
         echo "Command : [ $cmd_str ]"
+
         case $cmd_str in
           setup-ubuntu)          
             if [ ! -f ~/.ssh/id_rsa.pub ];then
@@ -98,34 +102,29 @@ function sb-host {
             if [ -f ~/.ssh/id_rsa.pub ];then
               echo "Copying keys to remote server"
               ssh-copy-id $config_str
-              run-on-host $host_config_id ./lib/sb_host.sh setup-ubuntu
+              run-remote-script $user_str $host_str ./lib/sb_host.sh setup-ubuntu
+              if [ "$user_str" == "root" ]; then
+                remote_user_path="/"
+              fi
+
             else
               echo "No public key found (must have ssh and ssh-keygen installed"
             fi      
             ;;
-
-          *)
-            run-on-host $host_config_id $cmd_str
-            ;;
-
           "")
             echo "command empty"
             ;;
+          *)
+            run-remote-script $user_str $host_str $cmd_str
+            ;;
+
+
         esac
   
       fi
     fi 
 }
 
-function run-on-host {
-  local host_config_id=$1
-  shift
-  local param_str=$@
-  local config_str=$(readvaluefromfile $host_config_id stack_hosts.conf)
-  local user_str=$(echo $config_str | cut -d'@' -f 1)
-  local host_str=$(echo $config_str | cut -d'@' -f 2)
-  run-remote-script $user_str $host_str $param_str
-}
 
 function run-remote-script {
 # run-remote-script stackbuilder ip_address ./lib/sb_host.sh bash
@@ -204,8 +203,10 @@ function create-host-config {
     echo "Must provide a config title, host/IP and user name to configure ssh connection. CANCELED"
     return
   else
-
-    addreplacevalue "$config_title =" "$config_title = $user_str@$host_str" stack_hosts.conf
+    mkdir -p ./.stack_hosts
+    touch ./.stack_hosts/$config_title.conf
+    addreplacevalue "HOST =" "HOST = $host_str" ./.stack_hosts/$config_title.conf
+    addreplacevalue "USER =" "USER = $user_str" ./.stack_hosts/$config_title.conf
   fi
   echo $config_title
 }
