@@ -53,7 +53,7 @@ function create-stackuilder-user {
     sudo usermod -aG sudo $new_user
 
     cd /home/$new_user
-    mkdir /home/$new_user/.ssh
+    mkdir -p /home/$new_user/.ssh
     touch /home/$new_user/.ssh/authorized_keys
     sudo chmod 600 /home/$new_user/.ssh/authorized_keys
     sudo chown -R $new_user:$new_user /home/$new_user
@@ -79,7 +79,7 @@ function main {
     local cmd_line="$@"
     local first_param="$1"
     #local source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-    local source_dir=$(get_source_dir)
+    local source_dir=$(get-source-dir)
     local source_file="${BASH_SOURCE[0]}"
 
     case $first_param in
@@ -102,11 +102,18 @@ function main {
 }
 
 function setup-ubuntu {
+  local cmd_line="$@"
+  local first_param="$1"
+  local devtools_str=""
+  if [[ $cmd_line == *"devtools"* ]]; then
+    devtools_str="$devtools_str ansible"
+    echo "INSTALLING devtools : $devtools_str"
+  fi
   create-stackuilder-user
   install-docker
 
   #sudo apt-get update -y
-  sudo apt-get install -y fail2ban sendmail ufw git ansible
+  sudo apt-get install -y fail2ban sendmail ufw git $devtools_str
   sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
   #sudo cat /etc/fail2ban/jail.local
   sudo ufw disable

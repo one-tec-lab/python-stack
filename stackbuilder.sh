@@ -76,9 +76,10 @@ function sb-rancher {
 function sb-host {
     local host_config_id=$1
     shift
+    local first_param=$1
     local cmd_str=$@
     if [[ -z  $host_config_id  ]] || [[ ! -f ./.stack_hosts/$host_config_id.conf ]];then
-      create-host-config $host_config_id
+      create-host-config $host_config_id 
     fi
     if [[ -f ./.stack_hosts/$host_config_id.conf ]];then
       local user_str=$(readvaluefromfile "USER" ./.stack_hosts/$host_config_id.conf)
@@ -93,7 +94,7 @@ function sb-host {
         echo "Executing at $host_config_id : $config_str "
         echo "Command : [ $cmd_str ]"
 
-        case $cmd_str in
+        case $first_param in
           setup-ubuntu)          
             if [ ! -f ~/.ssh/id_rsa.pub ];then
               echo "Must generate ssh keys localy"
@@ -102,7 +103,8 @@ function sb-host {
             if [ -f ~/.ssh/id_rsa.pub ];then
               echo "Copying keys to remote server"
               ssh-copy-id $config_str
-              run-remote-script $user_str $host_str ./lib/sb_host.sh setup-ubuntu
+              shift
+              run-remote-script $user_str $host_str ./lib/sb_host.sh $cmd_str
               if [ "$user_str" == "root" ]; then
                 remote_user_path="/"
               fi
