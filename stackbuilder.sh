@@ -30,7 +30,7 @@ if [ -f stackbuilder.sh ];then
 fi
 echo "Stackbuilder v $SB_VERSION $SB_VERSION_DATE"
 
-echo "PROJECT [ $SB_PROJECT ] $(get_source_dir)"
+echo "PROJECT [ $SB_PROJECT ] $(get-source-dir)"
 case "$os" in
   darwin)
     echo "I'm in a Mac"
@@ -101,20 +101,20 @@ function sb-host {
               ssh-keygen -t rsa -b 4096
             fi
             if [ -f ~/.ssh/id_rsa.pub ];then
+              shift
+              echo 
               echo "Copying keys to remote server"
               ssh-copy-id $config_str
-              shift
               run-remote-script $user_str $host_str ./lib/sb_host.sh $cmd_str
-              if [ "$user_str" == "root" ]; then
-                remote_user_path="/"
-              fi
-
             else
               echo "No public key found (must have ssh and ssh-keygen installed"
             fi      
             ;;
           "")
             echo "command empty"
+            ;;
+          bash)
+            ssh -t $user_str@$host_str 
             ;;
           *)
             run-remote-script $user_str $host_str $cmd_str

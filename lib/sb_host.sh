@@ -25,7 +25,7 @@ function get-source-dir {
 
 function install-docker {
   sudo apt-get update
-  sudo apt-get install \
+  sudo apt-get install -y \
     apt-transport-https \
     ca-certificates \
     curl \
@@ -40,8 +40,8 @@ function install-docker {
    $(lsb_release -cs) \
    stable"
    sudo apt-get update
-   sudo apt-get install docker-ce docker-ce-cli containerd.io
-   sudo docker run hello-world
+   sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+   sudo docker run -rm hello-world
    sudo curl -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
    sudo chmod +x /usr/local/bin/docker-compose
 }
@@ -101,6 +101,25 @@ function main {
   fi
 }
 
+function devtoolsup {
+
+    echo "STARTING rancher ports 22080,22443"
+    sudo docker run -d --name=sb_rancher --restart=unless-stopped -p 22080:80 -p 22443:443 rancher/rancher
+    echo "STARTING portainer port 29000"
+    sudo docker volume create portainer_data
+    sudo docker run -d --name=sb_portainer --restart=unless-stopped -p 29000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+
+}
+
+function devtoolsdown {
+
+    echo "STOPPING rancher ports 22080,22443"
+     sudo docker stop sb_rancher 
+    echo "STOPPING portainer port 29000"
+
+    sudo docker stop sb_portainer
+}
+ 
 function setup-ubuntu {
   local cmd_line="$@"
   local first_param="$1"
@@ -109,11 +128,12 @@ function setup-ubuntu {
     devtools_str="$devtools_str ansible"
     echo "INSTALLING devtools : $devtools_str"
   fi
-  create-stackuilder-user
+
+  #create-stackuilder-user
   install-docker
 
   #sudo apt-get update -y
-  sudo apt-get install -y fail2ban sendmail ufw git $devtools_str
+  sudo apt-get install -y fail2ban sendmail ufw git jq $devtools_str
   sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
   #sudo cat /etc/fail2ban/jail.local
   sudo ufw disable
