@@ -106,7 +106,7 @@ function setup-ubuntu {
   install-docker
 
   #sudo apt-get update -y
-  sudo apt-get install -y fail2ban sendmail ufw git
+  sudo apt-get install -y fail2ban sendmail ufw git ansible
   sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
   #sudo cat /etc/fail2ban/jail.local
   sudo ufw disable

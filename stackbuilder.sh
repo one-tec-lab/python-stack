@@ -290,6 +290,10 @@ function stackb {
   local portainer_port="29000"
   local enable_central_log_str=""
   SB_PROJECT="$(basename $(pwd))"
+  if [ ! -f stack.conf ]; then
+    echo "Not inside stackbuilder project. Quiting."
+    return
+  fi
   echo "Executing : stackb $full_params"
   if [ -f .stack.env ]; then
     echo "Using .stack.env"
