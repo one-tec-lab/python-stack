@@ -105,10 +105,11 @@ function devtoolsup {
 
     echo "STARTING rancher ports 22080,22443"
     sudo docker run -d --name=sb_rancher --restart=unless-stopped -p 22080:80 -p 22443:443 rancher/rancher
+    sudo docker start sb_rancher 
     echo "STARTING portainer port 29000"
     sudo docker volume create portainer_data
     sudo docker run -d --name=sb_portainer --restart=unless-stopped -p 29000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
-
+    sudo docker start sb_portainer
 }
 
 function devtoolsdown {
