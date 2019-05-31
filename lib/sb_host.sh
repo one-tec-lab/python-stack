@@ -104,20 +104,21 @@ function main {
 function devtoolsup {
 
     echo "STARTING rancher ports 22080,22443"
-    sudo docker run -d --name=sb_rancher --restart=unless-stopped -p 22080:80 -p 22443:443 rancher/rancher
-    sudo docker start sb_rancher 
+    sudo docker volume create sb_data_rancher
+    sudo docker run -d --name=sb_rancher --rm -p 22080:80 -p 22443:443 -v sb_data_rancher:/var/lib/rancher rancher/rancher
+    #sudo docker run -d --name=sb_rancher --restart=unless-stopped -p 22080:80 -p 22443:443 rancher/rancher
+    #sudo docker start sb_rancher 
     echo "STARTING portainer port 29000"
-    sudo docker volume create portainer_data
-    sudo docker run -d --name=sb_portainer --restart=unless-stopped -p 29000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
-    sudo docker start sb_portainer
+    sudo docker volume create sb_data_portainer
+    sudo docker run -d --name=sb_portainer --rm -p 29000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v sb_data_portainer:/data portainer/portainer
+    #sudo docker start sb_portainer
 }
 
 function devtoolsdown {
 
     echo "STOPPING rancher ports 22080,22443"
-     sudo docker stop sb_rancher 
+    sudo docker stop sb_rancher 
     echo "STOPPING portainer port 29000"
-
     sudo docker stop sb_portainer
 }
  
@@ -125,14 +126,24 @@ function setup-ubuntu {
   local cmd_line="$@"
   local first_param="$1"
   local devtools_str=""
-  if [[ $cmd_line == *"devtools"* ]]; then
-    devtools_str="$devtools_str ansible"
-    echo "INSTALLING devtools : $devtools_str"
+  if id -u stackbuilder > /dev/null 2>&1; then
+    echo "User stackbuilder already exists"
+  else
+    echo "The user stackbuilder does not exist. Creating..."
+    create-stackuilder-user
   fi
 
-  #create-stackuilder-user
-  install-docker
 
+  install-docker
+  echo "Installing kubectl"
+  curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+  chmod +x ./kubectl
+  sudo mv ./kubectl /usr/local/bin/kubectl
+  kubectl version
+
+  if [[ $cmd_line == *"devtools"* ]]; then
+    devtools_str="$devtools_str ansible"
+  fi
   #sudo apt-get update -y
   sudo apt-get install -y fail2ban sendmail ufw git jq $devtools_str
   sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
@@ -184,7 +195,10 @@ sudo ufw enable
 sudo ufw status verbose
 #check log:
 # cat /var/log/auth.log
-
+if [[ $cmd_line == *"devtools"* ]]; then
+  echo "Starting devtools"
+  devtoolsup
+fi
 echo "setup-ubuntu Finished"
 }
 

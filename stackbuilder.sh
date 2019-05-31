@@ -116,8 +116,12 @@ function sb-host {
           bash)
             ssh -t $user_str@$host_str 
             ;;
+          sb)
+            shift
+            run-remote-script $user_str $host_str ./lib/sb_host.sh $@
+            ;;
           *)
-            run-remote-script $user_str $host_str $cmd_str
+            run-remote-script $user_str $host_str  $cmd_str
             ;;
 
 
